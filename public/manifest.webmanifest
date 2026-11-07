@@ -1,0 +1,11 @@
+{
+  "name": "מחברת שיעורים",
+  "short_name": "מחברת",
+  "start_url": "/",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "he",
+  "background_color": "#f7f7fb",
+  "theme_color": "#4f46e5",
+  "icons": []
+}
