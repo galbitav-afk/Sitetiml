@@ -1,11 +1,11 @@
 {
-  "name": "מחברת שיעורים",
-  "short_name": "מחברת",
+  "name": "הממלכה של גל",
+  "short_name": "הממלכה",
   "start_url": "/",
   "display": "standalone",
   "dir": "rtl",
   "lang": "he",
-  "background_color": "#f7f7fb",
-  "theme_color": "#4f46e5",
-  "icons": []
+  "background_color": "#f8f6fb",
+  "theme_color": "#4c2a85",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
 }

@@ -1,52 +1,141 @@
+"use client";
+
 /**
- * Records from the microphone in self-contained segments (each one a playable
- * file on its own), so every segment can be stored and transcribed as soon as
- * it ends — long before the lesson is over — and nothing is lost if the tab
- * crashes mid-lesson.
+ * Records long lessons (2-3h+) as self-contained segments. Each segment is a
+ * playable file of its own, so it can be stored and transcribed as soon as it
+ * ends. While a segment is open, its data so far is handed to `onPartial`
+ * every 10s, so a crash loses at most ~10 seconds.
+ *
+ * Sources: microphone (pick the device), tab/screen audio (Zoom, Teams, a
+ * recorded lecture playing in another tab), or both mixed together.
  */
 
 export const SEGMENT_SECONDS = 180;
-const BITRATE = 32_000; // speech-optimised; ~720KB per 3-minute segment
+const BITRATE = 32_000; // speech-optimised: ~720KB per 3 minutes, ~43MB for 3h
+const SILENT_PEAK = 0.006; // a segment whose loudest moment is below this is "digital silence"
+const NO_SOUND_RMS = 0.0025;
+export const NO_SOUND_WARN_SEC = 30;
 
-export interface Segment {
+export type SourceKind = "mic" | "tab" | "both";
+
+export interface SegmentData {
   blob: Blob;
   mime: string;
   index: number;
   startSec: number;
   durationSec: number;
+  /** True when nothing audible was captured (muted mic, total silence). */
+  silent: boolean;
 }
 
-function pickMime(): string {
+export interface RecorderCallbacks {
+  onSegment: (s: SegmentData) => Promise<void>;
+  onPartial?: (s: SegmentData) => Promise<void>;
+  onTrackEnded?: (kind: "mic" | "tab") => void;
+}
+
+export function pickMime(): string {
   const candidates = [
     "audio/webm;codecs=opus",
     "audio/webm",
+    "audio/ogg;codecs=opus",
     "audio/mp4;codecs=mp4a.40.2",
     "audio/mp4",
-    "audio/ogg;codecs=opus",
   ];
   if (typeof MediaRecorder === "undefined") return "";
   return candidates.find((m) => MediaRecorder.isTypeSupported(m)) ?? "";
 }
 
-export class SegmentedRecorder {
-  private stream?: MediaStream;
+export function recordingSupported() {
+  return (
+    typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined"
+  );
+}
+
+export function tabAudioSupported() {
+  return typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
+}
+
+/** Microphone constraints tuned for a lecture hall rather than a phone call. */
+export function micConstraints(deviceId?: string): MediaTrackConstraints {
+  return {
+    ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
+    echoCancellation: false, // built for calls; muffles a distant lecturer
+    noiseSuppression: true,
+    autoGainControl: true,
+    channelCount: 1,
+  };
+}
+
+export async function listMics(): Promise<MediaDeviceInfo[]> {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices.filter((d) => d.kind === "audioinput");
+}
+
+/** Acquire the input stream(s) for a source. Throws a Hebrew message on failure. */
+export async function acquireStreams(source: SourceKind, deviceId?: string) {
+  const streams: { mic?: MediaStream; tab?: MediaStream } = {};
+  try {
+    if (source === "tab" || source === "both") {
+      const display = await navigator.mediaDevices.getDisplayMedia({
+        video: true, // required by browsers; we drop it immediately
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      });
+      display.getVideoTracks().forEach((t) => t.stop());
+      if (!display.getAudioTracks().length) {
+        display.getTracks().forEach((t) => t.stop());
+        throw new Error(
+          'לא נבחר שמע. בחלון השיתוף בחר את הלשונית של השיעור (למשל זום בדפדפן) וסמן "שיתוף אודיו של הכרטיסייה".',
+        );
+      }
+      streams.tab = new MediaStream(display.getAudioTracks());
+    }
+    if (source === "mic" || source === "both") {
+      streams.mic = await navigator.mediaDevices.getUserMedia({ audio: micConstraints(deviceId) });
+    }
+  } catch (e) {
+    streams.mic?.getTracks().forEach((t) => t.stop());
+    streams.tab?.getTracks().forEach((t) => t.stop());
+    if (e instanceof DOMException && (e.name === "NotAllowedError" || e.name === "SecurityError")) {
+      throw new Error(
+        source === "mic"
+          ? "אין הרשאה למיקרופון. לחץ על סמל המנעול בשורת הכתובת, אפשר מיקרופון, ונסה שוב."
+          : "השיתוף בוטל או נחסם. נסה שוב ובחר לשונית עם שמע.",
+      );
+    }
+    if (e instanceof DOMException && (e.name === "NotFoundError" || e.name === "OverconstrainedError")) {
+      throw new Error("המיקרופון שנבחר לא נמצא. חבר מיקרופון או בחר מקור אחר.");
+    }
+    throw e instanceof Error ? e : new Error(String(e));
+  }
+  return streams;
+}
+
+export class LessonRecorder {
+  private ctx?: AudioContext;
+  private analyser?: AnalyserNode;
+  private mixed?: MediaStream;
   private recorder?: MediaRecorder;
-  private parts: Blob[] = [];
-  private index = 0;
-  private segmentStart = 0; // elapsed seconds at which the current segment began
-  private elapsedBefore = 0; // accumulated seconds before the current run
-  private runStartedAt = 0; // performance.now() of the current run
+  private index: number;
+  private segmentStart: number;
+  private elapsedBefore: number;
+  private runStartedAt = 0;
   private timer?: ReturnType<typeof setInterval>;
   private wakeLock?: WakeLockSentinel;
-  private audioCtx?: AudioContext;
-  private analyser?: AnalyserNode;
   private mime = "";
+  private segPeak = 0;
+  private quietSince = 0;
   private stopping?: () => void;
   private segmentEnds = new WeakMap<MediaRecorder, number>();
+  private segmentPeaks = new WeakMap<MediaRecorder, number>();
+  private pending = new Set<Promise<void>>();
   state: "idle" | "recording" | "paused" = "idle";
+  /** Current input level 0..1 for the meter. */
+  level = 0;
 
   constructor(
-    private onSegment: (s: Segment) => void | Promise<void>,
+    private streams: { mic?: MediaStream; tab?: MediaStream },
+    private cb: RecorderCallbacks,
     startIndex = 0,
     startElapsed = 0,
   ) {
@@ -55,61 +144,67 @@ export class SegmentedRecorder {
     this.segmentStart = startElapsed;
   }
 
-  static isSupported() {
-    return (
-      typeof navigator !== "undefined" &&
-      !!navigator.mediaDevices?.getUserMedia &&
-      typeof MediaRecorder !== "undefined"
-    );
-  }
-
   get elapsed() {
     if (this.state !== "recording") return this.elapsedBefore;
     return this.elapsedBefore + (performance.now() - this.runStartedAt) / 1000;
   }
 
-  /** 0..1 input level for the visualiser. */
-  level(): number {
-    if (!this.analyser) return 0;
-    const data = new Uint8Array(this.analyser.fftSize);
-    this.analyser.getByteTimeDomainData(data);
-    let sum = 0;
-    for (const v of data) sum += ((v - 128) / 128) ** 2;
-    return Math.min(1, Math.sqrt(sum / data.length) * 3);
+  /** Seconds of continuous near-silence (to warn "no sound is coming in"). */
+  get quietFor() {
+    return this.state === "recording" && this.quietSince ? (performance.now() - this.quietSince) / 1000 : 0;
   }
 
   async start() {
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        channelCount: 1,
-      },
-    });
-    this.mime = pickMime();
-    try {
-      this.audioCtx = new AudioContext();
-      const src = this.audioCtx.createMediaStreamSource(this.stream);
-      this.analyser = this.audioCtx.createAnalyser();
-      this.analyser.fftSize = 1024;
+    this.ctx = new AudioContext();
+    await this.ctx.resume().catch(() => {});
+    const dest = this.ctx.createMediaStreamDestination();
+    this.analyser = this.ctx.createAnalyser();
+    this.analyser.fftSize = 2048;
+    for (const [kind, s] of Object.entries(this.streams) as ["mic" | "tab", MediaStream | undefined][]) {
+      if (!s) continue;
+      const src = this.ctx.createMediaStreamSource(s);
+      src.connect(dest);
       src.connect(this.analyser);
-    } catch {
-      /* visualiser is optional */
+      s.getAudioTracks().forEach((t) => (t.onended = () => this.cb.onTrackEnded?.(kind)));
     }
+    // A single source is recorded directly; a mix of two goes through the graph.
+    const single = this.streams.mic && this.streams.tab ? undefined : (this.streams.mic ?? this.streams.tab);
+    this.mixed = single ?? dest.stream;
+    this.mime = pickMime();
+
     await this.acquireWakeLock();
     document.addEventListener("visibilitychange", this.onVisibility);
     this.state = "recording";
     this.runStartedAt = performance.now();
+    this.quietSince = performance.now();
     this.startSegment();
-    this.timer = setInterval(() => {
-      if (
-        this.state === "recording" &&
-        this.elapsed - this.segmentStart >= SEGMENT_SECONDS
-      ) {
-        this.rotate();
-      }
-    }, 1000);
+    this.timer = setInterval(() => this.tick(), 250);
+  }
+
+  private tick() {
+    this.sampleLevel();
+    if (this.state === "recording" && this.elapsed - this.segmentStart >= SEGMENT_SECONDS) this.rotate();
+  }
+
+  private sampleLevel() {
+    if (!this.analyser || this.state !== "recording") {
+      this.level = 0;
+      return;
+    }
+    const data = new Float32Array(this.analyser.fftSize);
+    this.analyser.getFloatTimeDomainData(data);
+    let sum = 0;
+    let peak = 0;
+    for (const v of data) {
+      sum += v * v;
+      const a = Math.abs(v);
+      if (a > peak) peak = a;
+    }
+    const rms = Math.sqrt(sum / data.length);
+    this.level = Math.min(1, rms * 8);
+    if (peak > this.segPeak) this.segPeak = peak;
+    if (rms > NO_SOUND_RMS) this.quietSince = 0;
+    else if (!this.quietSince) this.quietSince = performance.now();
   }
 
   pause() {
@@ -117,16 +212,18 @@ export class SegmentedRecorder {
     this.elapsedBefore = this.elapsed;
     this.recorder.pause();
     this.state = "paused";
+    this.level = 0;
   }
 
   resume() {
     if (this.state !== "paused" || !this.recorder) return;
     this.runStartedAt = performance.now();
+    this.quietSince = performance.now();
     this.recorder.resume();
     this.state = "recording";
   }
 
-  /** Stops recording; resolves after the final segment has been emitted. */
+  /** Stops; resolves once the final segment has been handed to onSegment and saved. */
   async stop() {
     if (this.state === "idle") return;
     if (this.state === "recording") this.elapsedBefore = this.elapsed;
@@ -134,80 +231,105 @@ export class SegmentedRecorder {
     clearInterval(this.timer);
     await new Promise<void>((resolve) => {
       this.stopping = resolve;
-      if (this.recorder && this.recorder.state !== "inactive") {
-        this.segmentEnds.set(this.recorder, this.elapsedBefore);
-        this.recorder.stop();
-      } else {
-        resolve();
-      }
+      const rec = this.recorder;
+      if (rec && rec.state !== "inactive") {
+        this.segmentEnds.set(rec, this.elapsedBefore);
+        this.segmentPeaks.set(rec, this.segPeak);
+        rec.stop();
+      } else resolve();
     });
-    this.stream?.getTracks().forEach((t) => t.stop());
-    this.audioCtx?.close().catch(() => {});
+    await Promise.allSettled([...this.pending]);
+    this.streams.mic?.getTracks().forEach((t) => t.stop());
+    this.streams.tab?.getTracks().forEach((t) => t.stop());
+    await this.ctx?.close().catch(() => {});
     document.removeEventListener("visibilitychange", this.onVisibility);
-    this.wakeLock?.release().catch(() => {});
+    await this.wakeLock?.release().catch(() => {});
   }
 
   private startSegment() {
-    if (!this.stream) return;
-    const rec = new MediaRecorder(this.stream, {
+    if (!this.mixed) return;
+    const rec = new MediaRecorder(this.mixed, {
       ...(this.mime ? { mimeType: this.mime } : {}),
       audioBitsPerSecond: BITRATE,
     });
-    this.parts = [];
-    const parts = this.parts;
+    const parts: Blob[] = [];
     const index = this.index++;
     const startSec = this.segmentStart;
+    this.segPeak = 0;
+    const mimeOf = () => rec.mimeType || this.mime || "audio/webm";
+
     rec.ondataavailable = (e) => {
-      if (e.data.size > 0) parts.push(e.data);
+      if (e.data.size === 0) return;
+      parts.push(e.data);
+      if (rec.state === "recording" || rec.state === "paused") {
+        this.track(
+          this.cb.onPartial?.({
+            blob: new Blob(parts, { type: mimeOf() }),
+            mime: mimeOf(),
+            index,
+            startSec,
+            durationSec: Math.max(0, this.elapsed - startSec),
+            silent: false,
+          }),
+        );
+      }
     };
-    rec.onstop = async () => {
+    rec.onstop = () => {
       const end = this.segmentEnds.get(rec) ?? this.elapsed;
-      const mime = rec.mimeType || this.mime || "audio/webm";
+      const peak = this.segmentPeaks.get(rec) ?? this.segPeak;
       if (parts.length) {
-        await this.onSegment({
-          blob: new Blob(parts, { type: mime }),
-          mime,
-          index,
-          startSec,
-          durationSec: Math.max(0, end - startSec),
-        });
+        this.track(
+          this.cb.onSegment({
+            blob: new Blob(parts, { type: mimeOf() }),
+            mime: mimeOf(),
+            index,
+            startSec,
+            durationSec: Math.max(0, end - startSec),
+            silent: peak < SILENT_PEAK,
+          }),
+        );
       }
       if (this.state === "idle" && rec === this.recorder) this.stopping?.();
     };
-    rec.start(10_000); // flush data every 10s so a crash loses at most that much
+    rec.start(10_000);
     this.recorder = rec;
   }
 
-  /** Close the current segment and immediately open a new one. */
+  private track(p: Promise<void> | undefined) {
+    if (!p) return;
+    const tracked = p.catch(() => {});
+    this.pending.add(tracked);
+    void tracked.finally(() => this.pending.delete(tracked));
+  }
+
   private rotate() {
     const old = this.recorder;
     const boundary = this.elapsed;
     this.elapsedBefore = boundary;
     this.runStartedAt = performance.now();
-    this.segmentStart = boundary;
     if (old) {
       this.segmentEnds.set(old, boundary);
-      old.stop();
+      this.segmentPeaks.set(old, this.segPeak);
     }
+    this.segmentStart = boundary;
+    old?.stop();
     this.startSegment();
   }
 
   private onVisibility = () => {
-    if (document.visibilityState === "visible" && this.state !== "idle") {
-      void this.acquireWakeLock();
-    }
+    if (document.visibilityState === "visible" && this.state !== "idle") void this.acquireWakeLock();
   };
 
   private async acquireWakeLock() {
     try {
       this.wakeLock = await navigator.wakeLock?.request("screen");
     } catch {
-      /* not supported / denied — recording still works */
+      /* unsupported or denied */
     }
   }
 }
 
-/* ---------- Live captions via the browser's built-in speech recognition ---------- */
+/* ---------- Free live caption draft (browser speech recognition, mic only) ---------- */
 
 interface SpeechRecognitionLike {
   lang: string;
@@ -215,13 +337,11 @@ interface SpeechRecognitionLike {
   interimResults: boolean;
   start(): void;
   stop(): void;
-  onresult: ((e: SpeechRecognitionEventLike) => void) | null;
+  onresult:
+    | ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void)
+    | null;
   onend: (() => void) | null;
   onerror: ((e: { error: string }) => void) | null;
-}
-interface SpeechRecognitionEventLike {
-  resultIndex: number;
-  results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
 }
 
 export class LiveCaptions {
@@ -249,6 +369,7 @@ export class LiveCaptions {
     rec.continuous = true;
     rec.interimResults = true;
     rec.onresult = (e) => {
+      if (rec !== this.rec) return; // a previous instance still winding down
       let finalText = "";
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -259,13 +380,11 @@ export class LiveCaptions {
       this.onUpdate(finalText, interim);
     };
     rec.onerror = (e) => {
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-        this.active = false;
-      }
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") this.active = false;
     };
-    // Browsers end recognition after silence; keep it alive while recording.
     rec.onend = () => {
-      if (this.active) {
+      // Browsers end recognition after silence; keep the current instance alive.
+      if (this.active && rec === this.rec) {
         try {
           rec.start();
         } catch {
@@ -283,8 +402,10 @@ export class LiveCaptions {
 
   stop() {
     this.active = false;
+    const rec = this.rec;
+    this.rec = undefined;
     try {
-      this.rec?.stop();
+      rec?.stop();
     } catch {
       /* ignore */
     }
