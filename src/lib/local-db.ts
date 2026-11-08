@@ -25,6 +25,9 @@ export interface AudioChunk {
   nextAttemptAt: number;
   text?: string;
   error?: string;
+  /** Cloud backup of the audio (Supabase Storage). */
+  cloud?: "uploaded" | "failed";
+  cloudAttempts?: number;
 }
 
 /** A lesson this device must drive to "ready" (recorded/uploaded/regenerated here). */

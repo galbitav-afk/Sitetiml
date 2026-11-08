@@ -8,7 +8,7 @@ import { CourseForm } from "@/components/course-form";
 import { MicCheck } from "@/components/mic-check";
 import Markdown from "@/components/markdown";
 import { Modal, PageLoader, Spinner, useToast } from "@/components/ui";
-import { createLesson, deleteLesson, nextLessonTitle, useCourses, useLesson, useSegments } from "@/lib/data";
+import { createLesson, deleteLesson, nextLessonTitle, useCourses, useLesson, useRecentSegments } from "@/lib/data";
 import { recordingSupported, tabAudioSupported, SEGMENT_SECONDS, type SourceKind } from "@/lib/recorder";
 import { formatClock } from "@/lib/format";
 import { PART_SECONDS } from "@/lib/pipeline";
@@ -224,7 +224,8 @@ function Studio() {
   const rec = useRecorder();
   const router = useRouter();
   const { data: lesson } = useLesson(rec.lessonId ?? undefined);
-  const { data: segments } = useSegments(rec.lessonId ?? undefined, true);
+  const { data: recent } = useRecentSegments(rec.lessonId ?? undefined);
+  const segments = recent?.items;
   const [note, setNote] = useState("");
   const [confirmStop, setConfirmStop] = useState(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
@@ -255,6 +256,7 @@ function Studio() {
   }
 
   const lastEnd = (segments ?? []).reduce((m, s) => Math.max(m, s.start_sec + s.duration_sec), 0);
+  const tabLost = rec.inputStatus === "tab-lost";
   const nextPartAt = (Math.floor(rec.elapsed / PART_SECONDS) + 1) * PART_SECONDS;
   const sinceSegment = rec.elapsed % SEGMENT_SECONDS;
 
@@ -274,6 +276,19 @@ function Studio() {
           לא נקלט קול כבר חצי דקה. בדוק שהמיקרופון לא מושתק ושנבחר ההתקן הנכון.
         </div>
       )}
+ {rec.inputStatus === "mic-lost" && (
+        <div role="alert" className="rounded-xl bg-warning/15 text-warning p-4 font-semibold flex items-center gap-3">
+          <span className="text-2xl blink" aria-hidden>🎙️</span>
+          המיקרופון התנתק. ההקלטה לא נעצרת: היא ממשיכה ומתחברת מחדש אוטומטית ברגע שהמיקרופון חוזר.
+        </div>
+      )}
+      {tabLost && (
+        <div role="alert" className="rounded-xl bg-warning/15 text-warning p-4 font-semibold flex flex-col sm:flex-row sm:items-center gap-3">
+          <span className="flex-1">שיתוף השמע מהלשונית הופסק, ולכן ההקלטה מושהית. לחץ כדי לשתף שוב ולהמשיך מאותה נקודה.</span>
+          <button className="btn btn-primary" onClick={() => rec.reattachTab()}>💻 שתף שוב והמשך</button>
+        </div>
+      )}
+      {rec.error && rec.status !== "idle" && <div role="alert" className="rounded-xl bg-rose-50 dark:bg-rose-950/40 text-danger p-3 text-sm">{rec.error}</div>}
       {rec.saveError && <div role="alert" className="rounded-xl bg-warning/15 text-warning p-3 text-sm font-medium">{rec.saveError}</div>}
 
       <div className="grid gap-4 lg:grid-cols-5">
@@ -284,7 +299,7 @@ function Studio() {
 
           <div className="flex items-center gap-4">
             <button
-              onClick={rec.status === "paused" ? rec.resume : rec.pause}
+              onClick={tabLost ? () => rec.reattachTab() : rec.status === "paused" ? rec.resume : rec.pause}
               disabled={!active}
               className="btn btn-ghost w-16 h-16 rounded-full text-2xl"
               aria-label={rec.status === "paused" ? "המשך הקלטה" : "השהיה (הפסקה)"}
@@ -348,7 +363,7 @@ function Studio() {
           <div className="card p-4 sm:p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-display text-lg font-bold">תמלול</h2>
-              <span className="text-xs text-muted">{segments?.length ?? 0} מקטעים · עד <span className="ltr">{formatClock(lastEnd)}</span></span>
+              <span className="text-xs text-muted">{recent?.total ?? 0} מקטעים · עד <span className="ltr">{formatClock(lastEnd)}</span></span>
             </div>
             <div ref={transcriptRef} className="max-h-[50vh] min-h-48 overflow-y-auto space-y-3 leading-relaxed pe-1">
               {segments?.map((s) => (

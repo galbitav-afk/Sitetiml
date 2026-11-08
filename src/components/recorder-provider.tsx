@@ -6,6 +6,7 @@ import {
   LessonRecorder,
   LiveCaptions,
   NO_SOUND_WARN_SEC,
+  type InputStatus,
   type SegmentData,
   type SourceKind,
 } from "@/lib/recorder";
@@ -34,6 +35,7 @@ export interface RecorderState {
   bookmarks: Bookmark[];
   error: string | null;
   saveError: string | null;
+  inputStatus: InputStatus;
 }
 
 interface RecorderApi extends RecorderState {
@@ -47,6 +49,7 @@ interface RecorderApi extends RecorderState {
   resume(): void;
   stop(): Promise<void>;
   bookmark(note?: string): Promise<void>;
+  reattachTab(): Promise<void>;
   clearError(): void;
 }
 
@@ -64,6 +67,7 @@ const initial: RecorderState = {
   bookmarks: [],
   error: null,
   saveError: null,
+  inputStatus: "ok",
 };
 
 const Ctx = createContext<RecorderApi | null>(null);
@@ -169,18 +173,14 @@ export function RecorderProvider({ children }: { children: React.ReactNode }) {
           {
             onPartial: (s) => saveChunk(s, "recording"),
             onSegment: (s) => saveChunk(s, "pending"),
-            onTrackEnded: (kind) => {
-              if (kind === "tab") {
-                patch({ error: "שיתוף השמע מהלשונית הופסק, ולכן ההקלטה נעצרה. אפשר להמשיך אותה מדף השיעור." });
-                void stopRef.current();
-              } else {
-                patch({ error: "המיקרופון התנתק. ההקלטה נעצרה. חבר אותו ולחץ 'המשך הקלטה' בדף השיעור." });
-                void stopRef.current();
-              }
+            onInputStatus: (inputStatus) => {
+              setState((st) => ({ ...st, inputStatus, status: inputStatus === "tab-lost" ? "paused" : st.status }));
+              if (inputStatus === "tab-lost") capRef.current?.stop();
             },
           },
           startIndex,
           startElapsed,
+          deviceId,
         );
         await rec.start();
         recRef.current = rec;
@@ -198,7 +198,8 @@ export function RecorderProvider({ children }: { children: React.ReactNode }) {
           cap.start();
           capRef.current = cap;
         }
-        patch({ status: "recording", elapsed: startElapsed, bookmarks: lesson.bookmarks ?? [] });
+        const bookmarks = resume ? ((await fetchLesson(lesson.id).catch(() => null))?.bookmarks ?? []) : (lesson.bookmarks ?? []);
+        patch({ status: "recording", elapsed: startElapsed, bookmarks });
         return true;
       } catch (e) {
         lessonRef.current = null;
@@ -244,9 +245,6 @@ export function RecorderProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...initial, error: s.error }));
   }, [patch]);
 
-  const stopRef = useRef(stop);
-  stopRef.current = stop;
-
   const pause = useCallback(() => {
     recRef.current?.pause();
     stopCaptions();
@@ -282,8 +280,18 @@ export function RecorderProvider({ children }: { children: React.ReactNode }) {
     [patch],
   );
 
+  const reattachTab = useCallback(async () => {
+    try {
+      await recRef.current?.reattachTab();
+      patch({ status: "recording", inputStatus: "ok", error: null });
+    } catch (e) {
+      patch({ error: e instanceof Error ? e.message : String(e) });
+    }
+  }, [patch]);
+
   const api: RecorderApi = {
     ...state,
+    reattachTab,
     start,
     stop,
     pause,

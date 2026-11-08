@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { localDb } from "@/lib/local-db";
+import { pipeline, recordingLockName } from "@/lib/pipeline";
 import { useAuth } from "./providers";
 import { useRecorder } from "./recorder-provider";
 import { Logo, PageLoader } from "./ui";
 import { isConfigured } from "@/lib/supabase";
-import { useCourses, useFlashcards } from "@/lib/data";
+import { useCourses, useFlashcards, useLessons } from "@/lib/data";
 import { isDue } from "@/lib/study";
 import { formatClock } from "@/lib/format";
 
@@ -30,17 +33,51 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isPublic) return <>{children}</>;
   if (loading || !user) return <PageLoader label="נכנסים לממלכה…" />;
 
+  return <DbGate>{shell(children)}</DbGate>;
+}
+
+function shell(children: React.ReactNode) {
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr]">
       <Sidebar />
       <div className="min-w-0 flex flex-col min-h-dvh">
         <MobileTopBar />
         <RecordingBar />
+        <InterruptedBanner />
         <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8 pb-28 lg:pb-12">
           {children}
         </main>
       </div>
       <MobileNav />
+    </div>
+  );
+}
+
+/** If the SQL migrations were never run, explain exactly what to do instead of failing. */
+function DbGate({ children }: { children: React.ReactNode }) {
+  const { error } = useCourses();
+  const missing = error && /could not find the table|does not exist|schema cache/i.test(error.message);
+  if (!missing) return <>{children}</>;
+  return (
+    <div className="min-h-dvh grid place-items-center p-6">
+      <div className="card max-w-xl p-8 space-y-4">
+        <div className="flex justify-center"><Logo /></div>
+        <h1 className="font-display text-2xl font-bold text-center">כמעט מוכן: צריך ליצור את הטבלאות</h1>
+        <p className="text-muted">ההתחברות עובדת, אבל במסד הנתונים עוד אין טבלאות. זה צעד חד-פעמי:</p>
+        <ol className="list-decimal ps-5 space-y-1.5 text-sm">
+          <li>היכנס ל-Supabase, פתח את הפרויקט, ומשם <b>SQL Editor</b> ואז <b>New query</b>.</li>
+          <li>
+            הדבק והרץ (<b>Run</b>), לפי הסדר, את שלושת הקבצים מהתיקייה <code className="ltr">supabase/migrations</code> במאגר:
+            <ul className="list-disc ps-5 mt-1 ltr text-left text-xs">
+              <li>20261107000000_init.sql</li>
+              <li>20261107000100_search.sql</li>
+              <li>20261108000000_audio_cloud.sql</li>
+            </ul>
+          </li>
+          <li>רענן את הדף.</li>
+        </ol>
+        <button className="btn btn-primary w-full" onClick={() => window.location.reload()}>רענון</button>
+      </div>
     </div>
   );
 }
@@ -171,7 +208,72 @@ function RecordingBar() {
         <span className="ltr tabular-nums font-bold">{formatClock(rec.elapsed)}</span>
         <span className="truncate opacity-90 hidden sm:inline">· {rec.lessonTitle}</span>
         {rec.noSound && <span className="chip bg-white text-red-700">לא נקלט קול!</span>}
+        {rec.inputStatus === "mic-lost" && <span className="chip bg-white text-red-700">המיקרופון התנתק, מתחבר מחדש…</span>}
+        {rec.inputStatus === "tab-lost" && <span className="chip bg-white text-red-700">שיתוף השמע הופסק</span>}
         <Link href="/record" className="ms-auto btn btn-sm bg-white/15 hover:bg-white/25 text-white">חזרה לאולפן</Link>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A recording that stopped without the user pressing "stop" (crash, reload, closed tab)
+ * is offered for one-click continuation on every page.
+ */
+function InterruptedBanner() {
+  const rec = useRecorder();
+  const { data: lessons } = useLessons();
+  const localIds = useLiveQuery(async () => new Set((await localDb.chunks.toArray()).map((c) => c.lessonId)), []);
+  const [held, setHeld] = useState<Set<string> | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const check = async () => {
+      const q = await navigator.locks?.query?.();
+      setHeld(new Set((q?.held ?? []).map((l) => l.name ?? "")));
+    };
+    void check();
+    const t = setInterval(check, 10_000);
+    return () => clearInterval(t);
+  }, []);
+
+  if (!lessons || !localIds || !held || rec.status !== "idle") return null;
+  const lesson = lessons.find(
+    (l) => l.status === "recording" && !l.input_done && localIds.has(l.id) && !held.has(recordingLockName(l.id)),
+  );
+  if (!lesson) return null;
+
+  return (
+    <div className="bg-gold-soft border-b border-gold/40 no-print" role="alert">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+        <span className="flex-1">
+          ⏸️ ההקלטה של <b>{lesson.title}</b> נקטעה (למשל בגלל סגירת הדפדפן). מה שהוקלט שמור.
+        </span>
+        <div className="flex gap-2">
+          <button
+            className="btn btn-record btn-sm"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              await rec.start({ lesson: { ...lesson, bookmarks: [] }, source: "mic", resume: true });
+              setBusy(false);
+            }}
+          >
+            ⏺ המשך להקליט
+          </button>
+          <button
+            className="btn btn-ghost btn-sm"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              await pipeline.finishInterrupted(lesson, lesson.segment_count);
+              setBusy(false);
+            }}
+          >
+            סיים וסכם
+          </button>
+          <Link href={`/lesson/${lesson.id}`} className="btn btn-quiet btn-sm">לשיעור</Link>
+        </div>
       </div>
     </div>
   );

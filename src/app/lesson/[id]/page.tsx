@@ -66,7 +66,7 @@ function LessonView() {
         {course && <Link href={`/course/${course.id}`} className="hover:text-royal truncate">{course.name}</Link>}
       </nav>
 
-      <LessonHeader lesson={lesson} courseColor={course?.color} />
+      <LessonHeader lesson={lesson} courseColor={course?.color} courseName={course?.name} />
       <StatusPanel lesson={lesson} segmentsCount={segments?.length ?? 0} />
 
       <Tabs<Tab>
@@ -113,7 +113,7 @@ function LessonView() {
 
 /* ---------- Header ---------- */
 
-function LessonHeader({ lesson, courseColor }: { lesson: Lesson; courseColor?: string }) {
+function LessonHeader({ lesson, courseColor, courseName }: { lesson: Lesson; courseColor?: string; courseName?: string }) {
   const router = useRouter();
   const toast = useToast();
   const [editing, setEditing] = useState(false);
@@ -158,6 +158,21 @@ function LessonHeader({ lesson, courseColor }: { lesson: Lesson; courseColor?: s
           </div>
         </div>
         <div className="flex gap-2 no-print relative">
+          {lesson.summary && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={async () => {
+                try {
+                  const { lessonDocx, saveBlob } = await import("@/lib/docx-export");
+                  saveBlob(await lessonDocx(courseName ?? "", lesson), `${lesson.title}.docx`);
+                } catch (e) {
+                  toast(`יצירת קובץ ה-Word נכשלה: ${e instanceof Error ? e.message : e}`, "error");
+                }
+              }}
+            >
+              📄 Word
+            </button>
+          )}
           {lesson.summary && <button className="btn btn-ghost btn-sm" onClick={() => window.print()}>🖨️ PDF</button>}
           <button className="btn btn-ghost btn-sm" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="פעולות נוספות">⋯</button>
           {menu && (
@@ -227,18 +242,7 @@ function StatusPanel({ lesson, segmentsCount }: { lesson: Lesson; segmentsCount:
     const finish = async () => {
       setBusy(true);
       try {
-        const chunks = localChunks ?? [];
-        const count = haveLocal ? Math.max(...chunks.map((c) => c.idx)) + 1 : segmentsCount;
-        const duration = haveLocal ? chunks.reduce((m, c) => Math.max(m, c.startSec + c.durationSec), 0) : lesson.duration_sec;
-        await pipeline.addJob(lesson.id);
-        await updateLesson(lesson.id, {
-          input_done: true,
-          segment_count: count,
-          duration_sec: duration,
-          status: count ? "transcribing" : "error",
-          error: count ? null : "לא נקלט אודיו בהקלטה.",
-        });
-        pipeline.notify(lesson.id);
+        await pipeline.finishInterrupted(lesson, segmentsCount);
       } finally {
         setBusy(false);
       }

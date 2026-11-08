@@ -2,6 +2,8 @@
 
 import { ApiError, runTaskWithRetry, transcribeAudio } from "./ai-client";
 import {
+  AUDIO_BUCKET,
+  cloudAudioEnabled,
   fetchLesson,
   fetchSegments,
   insertFlashcards,
@@ -47,6 +49,9 @@ class Pipeline {
   private authBlocked = false;
   private ctxCache = new Map<string, { courseName: string; vocabulary: string }>();
   private activity: Activity = {};
+  private uploading = false;
+  /** Set when the cloud storage quota is full, so Settings can explain it. */
+  cloudFull = false;
   private listeners = new Set<() => void>();
 
   /* ---------- lifecycle ---------- */
@@ -121,6 +126,7 @@ class Pipeline {
     if (!this.leader || !this.userId) return;
     this.authBlocked = false;
     this.kick();
+    void this.uploadLoop();
     if (lessonId) void this.evaluate(lessonId);
     else void this.evaluateAll();
   }
@@ -190,6 +196,7 @@ class Pipeline {
         silent: chunk.silent,
       });
       await localDb.chunks.update(chunk.id, { status: "done", text, error: undefined });
+      void this.uploadLoop();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if (e instanceof ApiError && e.status === 401) {
@@ -232,6 +239,51 @@ class Pipeline {
     if (vocabulary) parts.push(`מונחים: ${vocabulary}.`);
     if (prev?.text) parts.push(prev.text.slice(-300));
     return parts.join(" ");
+  }
+
+  /* ---------- cloud audio backup ---------- */
+
+  /**
+   * Uploads each transcribed chunk's audio to Supabase Storage (one at a time, in
+   * the background), so recordings can be played on any device and survive this
+   * computer. Can be turned off in Settings.
+   */
+  private async uploadLoop() {
+    if (this.uploading || !this.leader || !this.userId) return;
+    this.uploading = true;
+    try {
+      if (!(await cloudAudioEnabled())) return;
+      for (;;) {
+        if (!this.leader || !navigator.onLine) return;
+        const uid = this.userId;
+        const next = (await localDb.chunks.where("status").equals("done").toArray())
+          .filter((c) => c.userId === uid && !c.cloud && (c.cloudAttempts ?? 0) < 5 && c.blob?.size > 0)
+          .sort((a, b) => a.lessonId.localeCompare(b.lessonId) || a.idx - b.idx)[0];
+        if (!next) return;
+        await this.uploadChunk(next);
+        if (this.cloudFull) return;
+      }
+    } finally {
+      this.uploading = false;
+    }
+  }
+
+  private async uploadChunk(c: AudioChunk) {
+    const base = c.mime.split(";")[0];
+    const ext = base.includes("ogg") ? "ogg" : base.includes("wav") ? "wav" : base.includes("mp4") ? "m4a" : "webm";
+    const path = `${c.userId}/${c.lessonId}/${String(c.idx).padStart(4, "0")}.${ext}`;
+    const sb = supabase();
+    const { error } = await sb.storage.from(AUDIO_BUCKET).upload(path, c.blob, { upsert: true, contentType: base });
+    if (error) {
+      const full = /exceed|quota|too large|payload/i.test(error.message);
+      if (full) this.cloudFull = true;
+      const attempts = (c.cloudAttempts ?? 0) + 1;
+      await localDb.chunks.update(c.id, { cloudAttempts: attempts, cloud: full || attempts >= 5 ? "failed" : undefined });
+      if (!full) await new Promise((r) => setTimeout(r, 5000 * attempts));
+      return;
+    }
+    await sb.from("transcript_segments").update({ audio_path: path, audio_bytes: c.blob.size }).eq("lesson_id", c.lessonId).eq("idx", c.idx);
+    await localDb.chunks.update(c.id, { cloud: "uploaded" });
   }
 
   /* ---------- summarization ---------- */
@@ -447,6 +499,27 @@ class Pipeline {
       .modify({ status: "pending", attempts: 0, nextAttemptAt: 0 });
     await this.addJob(lesson.id);
     await updateLesson(lesson.id, { status: "transcribing", error: null });
+    this.notify(lesson.id);
+  }
+
+  /** Close an interrupted recording (crash / closed tab) and summarize what was captured. */
+  async finishInterrupted(lesson: Pick<Lesson, "id" | "course_id" | "duration_sec">, cloudSegments: number) {
+    const chunks = await localDb.chunks.where("lessonId").equals(lesson.id).toArray();
+    await localDb.chunks
+      .where("lessonId")
+      .equals(lesson.id)
+      .filter((c) => c.status === "recording")
+      .modify({ status: "pending", nextAttemptAt: 0 });
+    const count = chunks.length ? Math.max(...chunks.map((c) => c.idx)) + 1 : cloudSegments;
+    const duration = chunks.length ? chunks.reduce((m, c) => Math.max(m, c.startSec + c.durationSec), 0) : lesson.duration_sec;
+    await this.addJob(lesson.id);
+    await updateLesson(lesson.id, {
+      input_done: true,
+      segment_count: count,
+      duration_sec: duration,
+      status: count ? "transcribing" : "error",
+      error: count ? null : "לא נקלט אודיו בהקלטה.",
+    });
     this.notify(lesson.id);
   }
 

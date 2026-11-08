@@ -28,10 +28,13 @@ export interface SegmentData {
   silent: boolean;
 }
 
+/** Input health, reported to the UI. Recording never stops by itself. */
+export type InputStatus = "ok" | "mic-lost" | "tab-lost";
+
 export interface RecorderCallbacks {
   onSegment: (s: SegmentData) => Promise<void>;
   onPartial?: (s: SegmentData) => Promise<void>;
-  onTrackEnded?: (kind: "mic" | "tab") => void;
+  onInputStatus?: (status: InputStatus) => void;
 }
 
 export function pickMime(): string {
@@ -129,6 +132,13 @@ export class LessonRecorder {
   private segmentEnds = new WeakMap<MediaRecorder, number>();
   private segmentPeaks = new WeakMap<MediaRecorder, number>();
   private pending = new Set<Promise<void>>();
+  private dest?: MediaStreamAudioDestinationNode;
+  private sources = new Map<"mic" | "tab", MediaStreamAudioSourceNode>();
+  private reconnectTimer?: ReturnType<typeof setInterval>;
+  /** Only trust "silence" when the level meter was really running for this segment. */
+  private levelTrusted = false;
+  private segLevelTrusted = new WeakMap<MediaRecorder, boolean>();
+  inputStatus: InputStatus = "ok";
   state: "idle" | "recording" | "paused" = "idle";
   /** Current input level 0..1 for the meter. */
   level = 0;
@@ -138,6 +148,7 @@ export class LessonRecorder {
     private cb: RecorderCallbacks,
     startIndex = 0,
     startElapsed = 0,
+    private deviceId?: string,
   ) {
     this.index = startIndex;
     this.elapsedBefore = startElapsed;
@@ -157,20 +168,18 @@ export class LessonRecorder {
   async start() {
     this.ctx = new AudioContext();
     await this.ctx.resume().catch(() => {});
-    const dest = this.ctx.createMediaStreamDestination();
+    this.dest = this.ctx.createMediaStreamDestination();
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 2048;
-    for (const [kind, s] of Object.entries(this.streams) as ["mic" | "tab", MediaStream | undefined][]) {
-      if (!s) continue;
-      const src = this.ctx.createMediaStreamSource(s);
-      src.connect(dest);
-      src.connect(this.analyser);
-      s.getAudioTracks().forEach((t) => (t.onended = () => this.cb.onTrackEnded?.(kind)));
+    for (const kind of ["mic", "tab"] as const) {
+      const s = this.streams[kind];
+      if (s) this.attach(kind, s);
     }
-    // A single source is recorded directly; a mix of two goes through the graph.
-    const single = this.streams.mic && this.streams.tab ? undefined : (this.streams.mic ?? this.streams.tab);
-    this.mixed = single ?? dest.stream;
+    // Always record the mix: if an input disappears (Bluetooth drop, USB unplug, sharing
+    // stopped) the recorder keeps running and the input is re-attached when it returns.
+    this.mixed = this.dest.stream;
     this.mime = pickMime();
+    navigator.mediaDevices.addEventListener?.("devicechange", this.onDeviceChange);
 
     await this.acquireWakeLock();
     document.addEventListener("visibilitychange", this.onVisibility);
@@ -181,16 +190,104 @@ export class LessonRecorder {
     this.timer = setInterval(() => this.tick(), 250);
   }
 
+  private attach(kind: "mic" | "tab", stream: MediaStream) {
+    if (!this.ctx || !this.dest || !this.analyser) return;
+    this.sources.get(kind)?.disconnect();
+    const src = this.ctx.createMediaStreamSource(stream);
+    src.connect(this.dest);
+    src.connect(this.analyser);
+    this.sources.set(kind, src);
+    this.streams[kind] = stream;
+    stream.getAudioTracks().forEach((t) => (t.onended = () => this.onInputLost(kind)));
+  }
+
+  private onInputLost(kind: "mic" | "tab") {
+    if (this.state === "idle") return;
+    this.sources.get(kind)?.disconnect();
+    this.sources.delete(kind);
+    if (kind === "mic") {
+      this.setInputStatus("mic-lost");
+      this.startReconnect();
+    } else {
+      // Screen/tab sharing can only be restarted by a click: pause until the user re-shares
+      // (when the mic is also recording, keep going with the mic alone).
+      if (this.streams.mic && this.sources.has("mic")) {
+        this.streams.tab = undefined;
+      } else {
+        this.pause();
+        this.setInputStatus("tab-lost");
+      }
+    }
+  }
+
+  private setInputStatus(s: InputStatus) {
+    this.inputStatus = s;
+    this.cb.onInputStatus?.(s);
+  }
+
+  private startReconnect() {
+    if (this.reconnectTimer) return;
+    const attempt = async () => {
+      if (this.state === "idle") return this.stopReconnect();
+      try {
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: micConstraints(this.deviceId) });
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: micConstraints() }); // any mic
+        }
+        if ((this.state as string) === "idle") return stream.getTracks().forEach((t) => t.stop());
+        this.attach("mic", stream);
+        this.stopReconnect();
+        this.setInputStatus("ok");
+      } catch {
+        /* still no microphone — try again shortly */
+      }
+    };
+    void attempt();
+    this.reconnectTimer = setInterval(() => void attempt(), 3000);
+  }
+
+  private stopReconnect() {
+    clearInterval(this.reconnectTimer);
+    this.reconnectTimer = undefined;
+  }
+
+  private onDeviceChange = () => {
+    if (this.inputStatus === "mic-lost") {
+      this.stopReconnect();
+      this.startReconnect();
+    }
+  };
+
+  /** Re-share tab/screen audio after sharing was stopped (must be called from a click). */
+  async reattachTab() {
+    const display = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
+    display.getVideoTracks().forEach((t) => t.stop());
+    if (!display.getAudioTracks().length) {
+      display.getTracks().forEach((t) => t.stop());
+      throw new Error('לא נבחר שמע. סמן "שיתוף אודיו של הכרטיסייה" בחלון השיתוף.');
+    }
+    this.attach("tab", new MediaStream(display.getAudioTracks()));
+    this.setInputStatus("ok");
+    this.resume();
+  }
+
   private tick() {
     this.sampleLevel();
     if (this.state === "recording" && this.elapsed - this.segmentStart >= SEGMENT_SECONDS) this.rotate();
   }
 
   private sampleLevel() {
-    if (!this.analyser || this.state !== "recording") {
+    if (this.ctx && this.ctx.state === "suspended") void this.ctx.resume().catch(() => {});
+    if (!this.analyser || this.state !== "recording" || this.ctx?.state !== "running") {
       this.level = 0;
       return;
     }
+    this.levelTrusted = true;
     const data = new Float32Array(this.analyser.fftSize);
     this.analyser.getFloatTimeDomainData(data);
     let sum = 0;
@@ -203,7 +300,8 @@ export class LessonRecorder {
     const rms = Math.sqrt(sum / data.length);
     this.level = Math.min(1, rms * 8);
     if (peak > this.segPeak) this.segPeak = peak;
-    if (rms > NO_SOUND_RMS) this.quietSince = 0;
+    // While the mic is disconnected the reconnect banner speaks for itself.
+    if (rms > NO_SOUND_RMS || this.inputStatus !== "ok") this.quietSince = 0;
     else if (!this.quietSince) this.quietSince = performance.now();
   }
 
@@ -235,10 +333,13 @@ export class LessonRecorder {
       if (rec && rec.state !== "inactive") {
         this.segmentEnds.set(rec, this.elapsedBefore);
         this.segmentPeaks.set(rec, this.segPeak);
+        this.segLevelTrusted.set(rec, this.levelTrusted);
         rec.stop();
       } else resolve();
     });
     await Promise.allSettled([...this.pending]);
+    this.stopReconnect();
+    navigator.mediaDevices.removeEventListener?.("devicechange", this.onDeviceChange);
     this.streams.mic?.getTracks().forEach((t) => t.stop());
     this.streams.tab?.getTracks().forEach((t) => t.stop());
     await this.ctx?.close().catch(() => {});
@@ -256,6 +357,7 @@ export class LessonRecorder {
     const index = this.index++;
     const startSec = this.segmentStart;
     this.segPeak = 0;
+    this.levelTrusted = false;
     const mimeOf = () => rec.mimeType || this.mime || "audio/webm";
 
     rec.ondataavailable = (e) => {
@@ -277,6 +379,7 @@ export class LessonRecorder {
     rec.onstop = () => {
       const end = this.segmentEnds.get(rec) ?? this.elapsed;
       const peak = this.segmentPeaks.get(rec) ?? this.segPeak;
+      const trusted = this.segLevelTrusted.get(rec) ?? this.levelTrusted;
       if (parts.length) {
         this.track(
           this.cb.onSegment({
@@ -285,7 +388,7 @@ export class LessonRecorder {
             index,
             startSec,
             durationSec: Math.max(0, end - startSec),
-            silent: peak < SILENT_PEAK,
+            silent: trusted && peak < SILENT_PEAK,
           }),
         );
       }
@@ -310,6 +413,7 @@ export class LessonRecorder {
     if (old) {
       this.segmentEnds.set(old, boundary);
       this.segmentPeaks.set(old, this.segPeak);
+      this.segLevelTrusted.set(old, this.levelTrusted);
     }
     this.segmentStart = boundary;
     old?.stop();

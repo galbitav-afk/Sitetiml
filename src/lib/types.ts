@@ -113,6 +113,8 @@ export interface Segment {
   duration_sec: number;
   text: string;
   silent: boolean;
+  audio_path?: string | null;
+  audio_bytes?: number;
 }
 
 export interface Flashcard {

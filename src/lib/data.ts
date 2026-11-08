@@ -61,6 +61,7 @@ export async function updateCourse(id: string, patch: Partial<Course>) {
 
 export async function deleteCourse(id: string) {
   const lessons = check(await supabase().from("lessons").select("id").eq("course_id", id)) as { id: string }[];
+  for (const l of lessons) await deleteCloudAudio(l.id).catch(() => {});
   check(await supabase().from("courses").delete().eq("id", id));
   for (const l of lessons) await deleteLocalLesson(l.id);
   await queryClient.invalidateQueries();
@@ -148,6 +149,7 @@ export async function updateLesson(id: string, patch: Partial<Lesson>) {
 }
 
 export async function deleteLesson(id: string) {
+  await deleteCloudAudio(id).catch(() => {});
   check(await supabase().from("lessons").delete().eq("id", id));
   await deleteLocalLesson(id);
   await queryClient.invalidateQueries();
@@ -167,7 +169,7 @@ export async function fetchSegments(lessonId: string): Promise<Segment[]> {
   return check(
     await supabase()
       .from("transcript_segments")
-      .select("id,lesson_id,idx,start_sec,duration_sec,text,silent")
+      .select("id,lesson_id,idx,start_sec,duration_sec,text,silent,audio_path,audio_bytes")
       .eq("lesson_id", lessonId)
       .order("idx"),
   ) as Segment[];
@@ -182,10 +184,30 @@ export function useSegments(lessonId: string | undefined, live = false) {
   });
 }
 
+/** Last `limit` segments + total count: keeps a 10-hour live studio light. */
+export function useRecentSegments(lessonId: string | undefined, limit = 40) {
+  return useQuery({
+    queryKey: [...keys.segments(lessonId ?? ""), "recent", limit],
+    queryFn: async () => {
+      const res = await supabase()
+        .from("transcript_segments")
+        .select("id,lesson_id,idx,start_sec,duration_sec,text,silent", { count: "exact" })
+        .eq("lesson_id", lessonId!)
+        .order("idx", { ascending: false })
+        .limit(limit);
+      if (res.error) throw new Error(res.error.message);
+      return { items: ((res.data ?? []) as Segment[]).reverse(), total: res.count ?? 0 };
+    },
+    enabled: !!lessonId,
+    refetchInterval: 5000,
+  });
+}
+
 export async function upsertSegment(s: Omit<Segment, "id">) {
   check(await supabase().from("transcript_segments").upsert(s, { onConflict: "lesson_id,idx" }));
   void queryClient.invalidateQueries({ queryKey: keys.segments(s.lesson_id) });
 }
+
 
 /* ---------- Flashcards ---------- */
 
@@ -242,13 +264,15 @@ export async function insertAttempt(a: Omit<QuizAttempt, "id" | "created_at">) {
 
 /* ---------- Course digest (summaries of every lesson, for AI context) ---------- */
 
-export type DigestLesson = Pick<Lesson, "id" | "title" | "created_at" | "duration_sec" | "summary" | "parts">;
+export type DigestLesson = Pick<Lesson, "id" | "title" | "created_at" | "duration_sec" | "summary" | "parts"> & {
+  quiz?: Lesson["quiz"];
+};
 
 export async function fetchDigest(courseId: string): Promise<DigestLesson[]> {
   return check(
     await supabase()
       .from("lessons")
-      .select("id,title,created_at,duration_sec,summary,parts")
+      .select("id,title,created_at,duration_sec,summary,parts,quiz")
       .eq("course_id", courseId)
       .not("summary", "is", null)
       .order("created_at"),
@@ -277,4 +301,40 @@ export interface SearchHit {
 
 export async function searchAll(q: string): Promise<SearchHit[]> {
   return check(await supabase().rpc("search_all", { q })) as SearchHit[];
+}
+
+/* ---------- Cloud audio (Supabase Storage) ---------- */
+
+export const AUDIO_BUCKET = "audio";
+
+export async function cloudAudioEnabled(): Promise<boolean> {
+  const { data } = await supabase().auth.getSession();
+  return (data.session?.user.user_metadata as { cloudAudio?: boolean } | undefined)?.cloudAudio !== false;
+}
+
+export async function audioUsage(): Promise<number> {
+  const { data, error } = await supabase().rpc("audio_usage");
+  if (error) throw new Error(error.message);
+  return Number(data ?? 0);
+}
+
+/** Remove a lesson's audio from the cloud (the transcript and summary stay). */
+export async function deleteCloudAudio(lessonId: string) {
+  const { data: session } = await supabase().auth.getSession();
+  const uid = session.session?.user.id;
+  if (!uid) return;
+  const prefix = `${uid}/${lessonId}`;
+  const { data: files } = await supabase().storage.from(AUDIO_BUCKET).list(prefix, { limit: 1000 });
+  if (files?.length) await supabase().storage.from(AUDIO_BUCKET).remove(files.map((f) => `${prefix}/${f.name}`));
+  await supabase().from("transcript_segments").update({ audio_path: null, audio_bytes: 0 }).eq("lesson_id", lessonId);
+}
+
+const signedCache = new Map<string, { url: string; exp: number }>();
+export async function signedAudioUrl(path: string): Promise<string> {
+  const hit = signedCache.get(path);
+  if (hit && hit.exp > Date.now() + 60_000) return hit.url;
+  const { data, error } = await supabase().storage.from(AUDIO_BUCKET).createSignedUrl(path, 3600);
+  if (error || !data) throw new Error(error?.message ?? "no url");
+  signedCache.set(path, { url: data.signedUrl, exp: Date.now() + 3600_000 });
+  return data.signedUrl;
 }

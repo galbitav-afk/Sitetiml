@@ -252,6 +252,22 @@ function NotebookTab({ course }: { course: Course }) {
     URL.revokeObjectURL(url);
   }
 
+  const [wordBusy, setWordBusy] = useState(false);
+  const [wordMenu, setWordMenu] = useState(false);
+  async function downloadWord(includeLessons: boolean) {
+    setWordMenu(false);
+    setWordBusy(true);
+    try {
+      const { notebookDocx, saveBlob } = await import("@/lib/docx-export");
+      const blob = await notebookDocx(course, nb, lessons, includeLessons);
+      saveBlob(blob, `${course.name} - מחברת.docx`);
+    } catch (e) {
+      toast(`יצירת קובץ ה-Word נכשלה: ${e instanceof Error ? e.message : e}`, "error");
+    } finally {
+      setWordBusy(false);
+    }
+  }
+
   if (isLoading) return <PageLoader />;
   if (!lessons.length) return <EmptyState icon="📓" title="המחברת תיבנה מהשיעורים המסוכמים" text="אחרי שיעור מסוכם אחד לפחות אפשר לבנות מחברת קורס." />;
 
@@ -270,6 +286,23 @@ function NotebookTab({ course }: { course: Course }) {
           <button className="btn btn-gold" onClick={build} disabled={!!progress}>
             {progress ? <Spinner className="w-4 h-4" /> : "✨"} {nb ? "עדכון המחברת" : "בניית מחברת מאוחדת"}
           </button>
+          <div className="relative">
+            <button className="btn btn-primary" onClick={() => (nb ? setWordMenu((m) => !m) : downloadWord(true))} disabled={wordBusy} aria-expanded={wordMenu}>
+              {wordBusy ? <Spinner className="w-4 h-4" /> : "📄"} הורדה ל-Word
+            </button>
+            {wordMenu && (
+              <div className="absolute top-12 right-0 z-20 card p-1.5 w-72 rise" onMouseLeave={() => setWordMenu(false)}>
+                <button className="w-full text-start rounded-lg px-3 py-2 hover:bg-royal-soft text-sm" onClick={() => downloadWord(true)}>
+                  <b>מחברת מלאה</b>
+                  <span className="block text-xs text-muted">פרקים לפי נושאים, מילון והכנה למבחן, ובנספחים הסיכום של כל שיעור ושאלות תרגול עם מפתח תשובות</span>
+                </button>
+                <button className="w-full text-start rounded-lg px-3 py-2 hover:bg-royal-soft text-sm" onClick={() => downloadWord(false)}>
+                  <b>מחברת מאוחדת בלבד</b>
+                  <span className="block text-xs text-muted">רק הפרקים, המילון ודף ההכנה (קצר יותר)</span>
+                </button>
+              </div>
+            )}
+          </div>
           <button className="btn btn-ghost" onClick={() => window.print()}>🖨️ PDF</button>
           <button className="btn btn-ghost" onClick={download}>⬇️ Markdown</button>
         </div>

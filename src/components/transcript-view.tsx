@@ -31,7 +31,7 @@ export default function TranscriptView(props: { segments: Segment[]; bookmarks: 
         <button className="btn btn-ghost shrink-0" onClick={download}>⬇️ הורדה</button>
       </div>
       {!audio.available && (
-        <p className="text-xs text-muted">ההקלטה עצמה שמורה רק במחשב שבו הוקלטה, ולכן אין כאן השמעה. התמלול זמין בכל מכשיר.</p>
+        <p className="text-xs text-muted">אין כאן השמעה: ההקלטה שמורה רק במחשב שבו הוקלטה (גיבוי הקלטות לענן כבוי או עדיין לא הסתיים). התמלול זמין בכל מכשיר.</p>
       )}
       <div className="card divide-y divide-line">
         {visible.map((s) => {

@@ -2,22 +2,41 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { lessonChunks, type AudioChunk } from "@/lib/local-db";
+import { lessonChunks } from "@/lib/local-db";
+import { signedAudioUrl, useSegments } from "@/lib/data";
 import { formatClock } from "@/lib/format";
 
+interface Source {
+  idx: number;
+  startSec: number;
+  durationSec: number;
+  url: () => Promise<string>;
+}
+
 /**
- * Plays a lesson's original audio from this computer (audio is kept locally,
- * only text goes to the cloud). Seamlessly continues across 3-minute chunks.
+ * Plays a lesson's original audio, seamlessly across its 3-5 minute chunks.
+ * Uses the copy on this computer when there is one, otherwise the cloud backup,
+ * so a lesson recorded on the laptop can be replayed on the phone.
  */
 export function useLessonAudio(lessonId: string) {
-  const chunks = useLiveQuery(() => lessonChunks(lessonId), [lessonId]);
+  const local = useLiveQuery(() => lessonChunks(lessonId), [lessonId]);
+  const { data: segments } = useSegments(lessonId);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
-  const currentRef = useRef<AudioChunk | null>(null);
+  const currentRef = useRef<Source | null>(null);
+  const sourcesRef = useRef<Source[]>([]);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState<number | null>(null);
 
-  const playable = (chunks ?? []).filter((c) => c.blob && c.blob.size > 0).sort((a, b) => a.idx - b.idx);
+  const localSources: Source[] = (local ?? [])
+    .filter((c) => c.blob && c.blob.size > 0)
+    .map((c) => ({ idx: c.idx, startSec: c.startSec, durationSec: c.durationSec, url: async () => URL.createObjectURL(c.blob) }));
+  const localIdx = new Set(localSources.map((s) => s.idx));
+  const cloudSources: Source[] = (segments ?? [])
+    .filter((s) => s.audio_path && !localIdx.has(s.idx))
+    .map((s) => ({ idx: s.idx, startSec: s.start_sec, durationSec: s.duration_sec, url: () => signedAudioUrl(s.audio_path!) }));
+  const sources = [...localSources, ...cloudSources].sort((a, b) => a.idx - b.idx);
+  sourcesRef.current = sources;
 
   useEffect(() => {
     const a = new Audio();
@@ -27,35 +46,37 @@ export function useLessonAudio(lessonId: string) {
     a.onpause = () => setPlaying(false);
     return () => {
       a.pause();
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      if (urlRef.current?.startsWith("blob:")) URL.revokeObjectURL(urlRef.current);
     };
   }, []);
 
-  const loadChunk = useCallback((c: AudioChunk, offset: number, list: AudioChunk[]) => {
+  const load = useCallback(async (src: Source, offset: number) => {
     const a = audioRef.current;
     if (!a) return;
-    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    urlRef.current = URL.createObjectURL(c.blob);
-    currentRef.current = c;
-    a.src = urlRef.current;
+    if (urlRef.current?.startsWith("blob:")) URL.revokeObjectURL(urlRef.current);
+    const url = await src.url();
+    urlRef.current = url;
+    currentRef.current = src;
+    a.src = url;
     a.onloadedmetadata = () => {
       a.currentTime = Math.max(0, offset);
       void a.play().catch(() => {});
     };
     a.onended = () => {
-      const next = list.find((x) => x.idx === c.idx + 1);
-      if (next) loadChunk(next, 0, list);
+      const next = sourcesRef.current.find((x) => x.idx === src.idx + 1);
+      if (next) void load(next, 0);
       else setPlaying(false);
     };
-    setTime(c.startSec + offset);
+    setTime(src.startSec + offset);
   }, []);
 
   const playAt = useCallback(
     (t: number) => {
-      const c = playable.find((x) => t >= x.startSec && t < x.startSec + Math.max(x.durationSec, 1)) ?? playable.find((x) => x.startSec >= t);
-      if (c) loadChunk(c, Math.max(0, t - c.startSec), playable);
+      const list = sourcesRef.current;
+      const src = list.find((x) => t >= x.startSec && t < x.startSec + Math.max(x.durationSec, 1)) ?? list.find((x) => x.startSec >= t);
+      if (src) void load(src, Math.max(0, t - src.startSec));
     },
-    [playable, loadChunk],
+    [load],
   );
 
   const toggle = () => {
@@ -72,7 +93,8 @@ export function useLessonAudio(lessonId: string) {
   };
 
   return {
-    available: playable.length > 0,
+    available: sources.length > 0,
+    fromCloud: localSources.length === 0 && cloudSources.length > 0,
     playing,
     time,
     playAt,
@@ -95,6 +117,7 @@ export function AudioBar({ audio }: { audio: LessonAudio }) {
         </button>
         <button className="btn btn-quiet btn-sm" onClick={() => audio.skip(15)} aria-label="קדימה 15 שניות">15↺</button>
         <span className="ltr tabular-nums text-sm font-semibold w-16 text-center">{formatClock(audio.time)}</span>
+        {audio.fromCloud && <span className="chip bg-royal-soft text-royal">☁️</span>}
         <button className="btn btn-quiet btn-sm" onClick={audio.close} aria-label="סגירת הנגן">✕</button>
       </div>
     </div>
