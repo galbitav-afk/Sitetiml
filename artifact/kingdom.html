@@ -1,0 +1,1816 @@
+<title>הממלכה של גל</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single study desk. Sticky top bar, one centered column (max 1080px), cards only where an object stands alone. */
+:root {
+  --plum: #3d2466; --plum-2: #2c1a4b; --plum-soft: #efe9f8; --gold: #a87a10; --gold-soft: #f8f0da;
+  --bg: #f6f4f9; --card: #ffffff; --ink: #1f1830; --muted: #6a6280; --line: #e4dfee;
+  --good: #16794f; --warn: #a15c07; --bad: #b42335; --good-soft: #e5f4ec; --bad-soft: #fbe8eb;
+  --display: "Frank Ruhl Libre", "David", Georgia, serif;
+  --body: "Heebo", "Segoe UI", Arial, sans-serif;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --plum: #b9a2f0; --plum-2: #d3c6f7; --plum-soft: #2a2140; --gold: #e8c264; --gold-soft: #3a3020;
+  --bg: #121019; --card: #1b1825; --ink: #ece8f5; --muted: #a49db8; --line: #2e2940;
+  --good: #4fd19a; --warn: #f2b24c; --bad: #f37b8c; --good-soft: #17322a; --bad-soft: #3a1c24; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --plum: #b9a2f0; --plum-2: #d3c6f7; --plum-soft: #2a2140; --gold: #e8c264; --gold-soft: #3a3020;
+  --bg: #121019; --card: #1b1825; --ink: #ece8f5; --muted: #a49db8; --line: #2e2940;
+  --good: #4fd19a; --warn: #f2b24c; --bad: #f37b8c; --good-soft: #17322a; --bad-soft: #3a1c24; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.7 var(--body); margin: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--card); }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--plum); }
+h1, h2, h3 { font-family: var(--display); line-height: 1.3; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 700; }
+h2 { font-size: 1.35rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--plum) 50%, transparent); outline-offset: 2px; border-radius: 6px; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 12px; padding-block: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.brand-mark { width: 36px; height: 36px; border-radius: 10px; background: var(--plum-2); color: var(--gold); display: grid; place-items: center; }
+:root .brand-mark { background: #2c1a4b; color: #e8c264; }
+.brand b { font-family: var(--display); font-size: 1.2rem; }
+.nav { display: flex; gap: 4px; margin-inline-start: auto; }
+.nav a { text-decoration: none; color: var(--muted); padding: 6px 12px; border-radius: 10px; font-weight: 500; display: flex; gap: 6px; align-items: center; }
+.nav a[aria-current="page"] { background: var(--plum-soft); color: var(--plum); }
+.nav a:hover { color: var(--ink); }
+main.wrap { padding-block: 24px 96px; display: grid; gap: 22px; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.card.tight { padding: 14px 16px; }
+.stack { display: grid; gap: 14px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.between { justify-content: space-between; }
+.grid2 { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.grid3 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+.tiny { font-size: .75rem; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+.grow { flex: 1; min-width: 0; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 8px 16px; border-radius: 11px; border: 1px solid transparent; font-weight: 600; cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s, transform .05s; white-space: nowrap; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--plum); color: var(--card); }
+.btn.primary:hover { background: var(--plum-2); }
+.btn.gold { background: var(--gold); color: #1d1405; }
+.btn.ghost { background: var(--card); border-color: var(--line); }
+.btn.ghost:hover { border-color: var(--plum); }
+.btn.quiet { background: transparent; color: var(--muted); }
+.btn.quiet:hover { color: var(--ink); background: var(--plum-soft); }
+.btn.danger { background: var(--bad); color: #fff; }
+.btn.sm { min-height: 34px; padding: 4px 12px; font-size: .88rem; border-radius: 9px; }
+.btn.lg { min-height: 50px; padding: 10px 22px; font-size: 1.05rem; }
+
+.input, .select, .textarea { width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 9px 12px; min-height: 42px; }
+.textarea { min-height: 120px; resize: vertical; line-height: 1.7; }
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--plum); box-shadow: 0 0 0 3px color-mix(in srgb, var(--plum) 18%, transparent); }
+label.lbl { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 4px; }
+.hint { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 9px; border-radius: 99px; font-size: .75rem; font-weight: 600; background: var(--plum-soft); color: var(--plum); white-space: nowrap; }
+.chip.gold { background: var(--gold-soft); color: var(--gold); }
+.chip.good { background: var(--good-soft); color: var(--good); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.warn { background: var(--gold-soft); color: var(--warn); }
+
+.tabs { display: flex; gap: 4px; padding: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 13px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: 1 0 auto; border: 0; background: transparent; padding: 8px 14px; border-radius: 10px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--plum); color: var(--card); }
+
+.bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--plum); border-radius: inherit; transition: width .4s; }
+.bar.indet > i { width: 35% !important; animation: indet 1.3s ease-in-out infinite; }
+@keyframes indet { from { margin-inline-start: -35%; } to { margin-inline-start: 100%; } }
+
+.course-card { position: relative; overflow: hidden; text-decoration: none; color: inherit; display: grid; gap: 6px; }
+.course-card .stripe { position: absolute; inset-block: 0; inset-inline-start: 0; width: 6px; }
+.course-card:hover { border-color: var(--plum); }
+.list-item { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; }
+.list-item:hover { border-color: var(--plum); }
+.num { width: 40px; height: 40px; border-radius: 11px; background: var(--plum-soft); color: var(--plum); display: grid; place-items: center; font-weight: 700; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-size: 1.7rem; font-family: var(--display); line-height: 1; font-variant-numeric: tabular-nums; }
+
+.md { line-height: 1.85; overflow-wrap: anywhere; }
+.md > * + * { margin-top: .75em; }
+.md h1, .md h2, .md h3, .md h4 { font-size: 1.1rem; margin-top: 1.1em; }
+.md ul, .md ol { padding-inline-start: 1.4em; margin-block: .5em; }
+.md li + li { margin-top: .25em; }
+.md strong { color: var(--plum); }
+.md code { background: var(--plum-soft); padding: .05em .35em; border-radius: 5px; direction: ltr; unicode-bidi: isolate; font-size: .92em; }
+.md pre { background: var(--plum-soft); padding: 12px; border-radius: 10px; overflow-x: auto; direction: ltr; }
+.md pre code { background: none; padding: 0; }
+.md blockquote { margin: 0; border-inline-start: 3px solid var(--gold); padding-inline-start: 12px; color: var(--muted); }
+.md table { border-collapse: collapse; display: block; overflow-x: auto; max-width: 100%; }
+.md th, .md td { border: 1px solid var(--line); padding: 5px 9px; text-align: start; }
+.md th { background: var(--plum-soft); }
+.md math { font-size: 1.08em; }
+.md math[display="block"] { display: block; margin: .6em 0; overflow-x: auto; }
+
+.overlay { position: fixed; inset: 0; z-index: 50; background: rgb(15 10 25 / .55); display: grid; place-items: center; padding: 16px; }
+.dialog { background: var(--card); border-radius: 18px; width: min(640px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 22px; display: grid; gap: 16px; }
+.toast-host { position: fixed; inset-inline: 0; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: grid; justify-items: center; gap: 8px; pointer-events: none; padding-inline: 16px; }
+.toast { background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 500; max-width: 520px; pointer-events: auto; }
+.toast.bad { background: var(--bad); color: #fff; }
+.toast.good { background: var(--good); color: #fff; }
+
+.opt { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: start; padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); cursor: pointer; }
+.opt:hover { border-color: var(--plum); }
+.opt.sel { border-color: var(--plum); background: var(--plum-soft); }
+.opt.ok { border-color: var(--good); background: var(--good-soft); }
+.opt.no { border-color: var(--bad); background: var(--bad-soft); }
+.letter { width: 26px; height: 26px; flex-shrink: 0; border-radius: 8px; border: 1px solid var(--line); display: grid; place-items: center; font-weight: 700; font-size: .85rem; background: var(--card); }
+.explain { background: var(--gold-soft); border-radius: 12px; padding: 12px 14px; font-size: .92rem; }
+
+.flip { perspective: 1200px; cursor: pointer; border: 0; background: none; padding: 0; width: 100%; }
+.flip-in { position: relative; min-height: 260px; transition: transform .45s; transform-style: preserve-3d; }
+.flip-in.on { transform: rotateY(180deg); }
+.face { position: absolute; inset: 0; backface-visibility: hidden; display: grid; place-items: center; text-align: center; padding: 24px; }
+.face.back { transform: rotateY(180deg); background: var(--plum-soft); }
+
+.chat { display: grid; grid-template-rows: 1fr auto; height: min(68vh, 680px); padding: 0; overflow: hidden; }
+.chat-log { overflow-y: auto; padding: 16px; display: grid; gap: 12px; align-content: start; }
+.bubble { max-width: 88%; padding: 9px 14px; border-radius: 16px; }
+.bubble.me { justify-self: start; background: var(--plum); color: var(--card); border-start-start-radius: 4px; }
+.bubble.ai { justify-self: end; background: var(--plum-soft); border-start-end-radius: 4px; }
+.chat form { border-top: 1px solid var(--line); padding: 10px; display: flex; gap: 8px; }
+
+.drop { border: 2px dashed var(--line); border-radius: 14px; padding: 18px; text-align: center; color: var(--muted); }
+.drop.on { border-color: var(--plum); background: var(--plum-soft); }
+.notice { border-radius: 12px; padding: 12px 14px; background: var(--gold-soft); }
+.notice.bad { background: var(--bad-soft); color: var(--bad); }
+.empty { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 34px 20px; }
+.empty .glyph { width: 54px; height: 54px; border-radius: 16px; background: var(--plum-soft); color: var(--plum); display: grid; place-items: center; }
+.steps { counter-reset: s; display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+.steps li::before { content: counter(s); width: 28px; height: 28px; border-radius: 99px; background: var(--plum); color: var(--card); display: grid; place-items: center; font-weight: 700; font-size: .85rem; }
+.icon { width: 18px; height: 18px; flex-shrink: 0; }
+.kbd { font-family: ui-monospace, monospace; font-size: .8em; border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; }
+details > summary { cursor: pointer; font-weight: 600; }
+@media (max-width: 720px) {
+  /* backdrop-filter would make the header the containing block of the fixed bottom nav */
+  .top { backdrop-filter: none; background: var(--card); }
+  .nav { position: fixed; inset: auto 0 0 0; margin: 0; justify-content: space-around; background: var(--card); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)); z-index: 30; }
+  .nav a { flex-direction: column; gap: 0; font-size: .72rem; padding: 4px 8px; }
+  .brand small { display: none; }
+  .toast-host { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div id="app"><div class="wrap" style="padding-block:40px"><p class="muted">טוען את הממלכה…</p></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script type="module">
+import { html, render, useState, useEffect, useRef, useMemo, useCallback } from "https://cdn.jsdelivr.net/npm/htm@3.1.1/preact/standalone.module.js";
+
+/* =====================================================================
+   Utilities
+   ===================================================================== */
+const DRIVE = "Google Drive";
+const LIBS = {
+  mammoth: "https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js",
+  pdf: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",
+  pdfWorker: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
+  docx: "https://cdn.jsdelivr.net/npm/docx@9.5.1/+esm",
+};
+const COLORS = ["#3d2466", "#0e6b78", "#1f7a4d", "#9a5b0b", "#a3253c", "#5b3fb5", "#1d4f9c", "#8a2a86"];
+const newId = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-5);
+const enc = new TextEncoder();
+const bytes = (s) => enc.encode(s || "").length;
+const hasHeb = (s) => /[\u0590-\u05FF]/.test(s || "");
+const dirOf = (s) => (hasHeb(s) ? "rtl" : "auto");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const fmtDate = (ts) => new Date(ts).toLocaleDateString("he-IL", { day: "numeric", month: "short", year: "numeric" });
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const daysUntil = (iso) => { const t = new Date(iso + "T00:00:00"); const n = new Date(); n.setHours(0, 0, 0, 0); return Math.round((t - n) / 864e5); };
+const words = (s) => (s || "").trim().split(/\s+/).filter(Boolean).length;
+const speechMinutes = (chars) => Math.max(1, Math.round(chars / 5.5 / 120)); // ~120 Hebrew words a minute
+const greeting = () => { const h = new Date().getHours(); return h < 5 ? "לילה טוב" : h < 12 ? "בוקר טוב" : h < 17 ? "צהריים טובים" : h < 21 ? "ערב טוב" : "לילה טוב"; };
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+const LETTERS = ["א", "ב", "ג", "ד", "ה", "ו"];
+
+/** Keep text under a UTF-8 byte budget (Claude input per call is capped at 256KB). */
+function fitBytes(text, max) {
+  if (bytes(text) <= max) return text;
+  let lo = 0, hi = text.length;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (bytes(text.slice(0, mid)) <= max) lo = mid; else hi = mid - 1; }
+  return text.slice(0, lo) + "\n\n[…החומר קוצר בגלל אורכו…]";
+}
+
+/** Split long transcripts into parts of ~maxBytes, on paragraph/sentence boundaries. */
+function splitByBytes(text, maxBytes) {
+  const units = text.replace(/\r/g, "").split(/(?<=\n\n)|(?<=[.!?…])\s+/);
+  const parts = []; let cur = "";
+  for (const u of units) {
+    if (bytes(cur) + bytes(u) > maxBytes && cur) { parts.push(cur.trim()); cur = ""; }
+    if (bytes(u) > maxBytes) { // a giant run-on chunk: hard-cut it
+      let rest = u;
+      while (bytes(rest) > maxBytes) { const piece = fitBytes(rest, maxBytes).replace(/\n\n\[…החומר קוצר בגלל אורכו…\]$/, ""); parts.push(piece); rest = rest.slice(piece.length); }
+      cur = rest;
+    } else cur += (cur ? " " : "") + u;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts;
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)?.dataset.loaded) return res();
+    const s = document.createElement("script"); s.src = src; s.async = true;
+    s.onload = () => { s.dataset.loaded = "1"; res(); }; s.onerror = () => rej(new Error("לא הצלחתי לטעון רכיב: " + src));
+    document.head.appendChild(s);
+  });
+}
+
+/* ---------- Markdown + math (KaTeX → native MathML, no fonts needed) ---------- */
+function mdToHtml(md) {
+  if (!md) return "";
+  const maths = [];
+  let src = String(md)
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => { maths.push([t, true]); return `MATHX${maths.length - 1}X`; })
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, t) => { maths.push([t, true]); return `MATHX${maths.length - 1}X`; })
+    .replace(/\\\(([\s\S]+?)\\\)/g, (_, t) => { maths.push([t, false]); return `MATHX${maths.length - 1}X`; })
+    .replace(/(^|[^\\\d$])\$([^\s$][^$\n]*?[^\s$]|[^\s$])\$(?!\d)/g, (_, pre, t) => { maths.push([t, false]); return `${pre}MATHX${maths.length - 1}X`; });
+  let out = window.marked ? window.marked.parse(src, { gfm: true, breaks: false }) : esc(src).replace(/\n/g, "<br>");
+  out = window.DOMPurify ? window.DOMPurify.sanitize(out) : out;
+  return out.replace(/MATHX(\d+)X/g, (_, i) => {
+    const [t, display] = maths[+i];
+    try { if (window.katex) return window.katex.renderToString(t, { output: "mathml", displayMode: display, throwOnError: false }); } catch {}
+    return `<code>${esc(t)}</code>`;
+  });
+}
+const Md = ({ text, cls = "" }) => html`<div class=${"md " + cls} dir="rtl" dangerouslySetInnerHTML=${{ __html: mdToHtml(text) }}></div>`;
+
+/* ---------- Icons (inline SVG) ---------- */
+const P = {
+  crown: "M3 9l4.5 3.5L12 5l4.5 7.5L21 9l-1.8 10.2a1.5 1.5 0 0 1-1.5 1.3H6.3a1.5 1.5 0 0 1-1.5-1.3z",
+  home: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
+  cards: "M4 7h12v13H4zM8 4h12v13",
+  search: "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM21 21l-4.5-4.5",
+  gear: "M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1",
+  plus: "M12 5v14M5 12h14",
+  upload: "M12 16V4M7 9l5-5 5 5M4 20h16",
+  drive: "M8 3h8l6 10-4 7H6l-4-7zM8 3l6 10M16 3l-6 10M2 13h20",
+  doc: "M6 3h8l5 5v13H6zM14 3v5h5M9 13h7M9 17h7",
+  check: "M5 12l5 5 9-10",
+  x: "M6 6l12 12M18 6L6 18",
+  chat: "M4 5h16v11H9l-5 4z",
+  cal: "M4 6h16v14H4zM4 10h16M9 3v5M15 3v5",
+  target: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z",
+  book: "M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6M20 4v14h-6",
+  pen: "M4 20l4-1 11-11-3-3L5 16zM14 6l3 3",
+  trash: "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
+  spark: "M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z",
+  help: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01",
+  scroll: "M7 3h11a2 2 0 0 1 2 2v2h-4M7 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7M9 9h6M9 13h6M9 17h4",
+};
+const Icon = ({ n, s = 18 }) => html`<svg class="icon" width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d=${P[n]} /></svg>`;
+
+/* =====================================================================
+   Claude capabilities
+   ===================================================================== */
+const caps = { db: null, user: null, sample: null, mcp: null, downloads: null, perms: null, uid: null, name: "" };
+
+async function bootCaps() {
+  if (!window.claude?.use) return "outside";
+  const names = ["db", "user", "sample", "mcp", "downloads", "permissions"];
+  const got = await Promise.all(names.map((n) => window.claude.use(n).catch(() => null)));
+  [caps.db, caps.user, caps.sample, caps.mcp, caps.downloads, caps.perms] = got;
+  if (!caps.db || !caps.user) return "nodb";
+  caps.uid = await caps.user.id().catch(() => null);
+  if (!caps.uid) return "signedout";
+  try { caps.name = (await caps.user.me())?.name || ""; } catch {}
+  return "ok";
+}
+
+const SAMPLE_ERRORS = {
+  not_granted: "צריך לאשר לדף להשתמש ב-Claude (חלון האישור). אפשר לשנות זאת בתפריט ההרשאות של הדף.",
+  rate_limited: "הגעת למגבלת השימוש ב-Claude לעכשיו. נסה שוב בעוד כמה דקות.",
+  prompt_too_large: "החומר ארוך מדי לבקשה אחת. נסה לחלק אותו.",
+  session_expired: "ההתחברות ל-Claude פגה. רענן את הדף.",
+  sampling_disabled: "השימוש ב-Claude מתוך דפים כבוי בחשבון הזה.",
+  refused: "Claude סירב לעבד את התוכן הזה.",
+  invalid_json: "התשובה של Claude לא הגיעה בפורמט הנכון. לחץ שוב כדי לנסות שוב.",
+  empty_completion: "Claude לא החזיר תשובה. נסה שוב.",
+  upstream_error: "תקלה זמנית בחיבור ל-Claude. נסה שוב.",
+};
+const sampleErr = (e) => new Error(SAMPLE_ERRORS[e?.code] || e?.message || "שגיאה בפנייה ל-Claude");
+
+async function askJSON(prompt, opts = {}) {
+  if (!caps.sample) throw new Error("הדף צריך להיות פתוח ב-Claude כדי להשתמש ב-AI.");
+  try { return await caps.sample.json(prompt, { modelTier: opts.tier || "default", ...(opts.images ? { images: opts.images } : {}) }); }
+  catch (e) { throw sampleErr(e); }
+}
+async function askText(input, opts = {}) {
+  if (!caps.sample) throw new Error("הדף צריך להיות פתוח ב-Claude כדי להשתמש ב-AI.");
+  try {
+    const r = await caps.sample(input, { modelTier: opts.tier || "default", cache: false, onText: opts.onText ? ({ text }) => opts.onText(text) : undefined, signal: opts.signal, ...(opts.images ? { images: opts.images } : {}) });
+    return r.text;
+  } catch (e) { if (e?.code === "cancelled") return e.text || ""; throw sampleErr(e); }
+}
+
+const MCP_ERRORS = {
+  server_not_connected: "Google Drive לא מחובר לחשבון ה-Claude שלך. חבר אותו ב-Claude: הגדרות, ואז Connectors.",
+  needs_reauth: "החיבור ל-Google Drive פג. התחבר אליו מחדש בהגדרות Claude (Connectors).",
+  approval_required: "צריך לאשר לדף גישה ל-Google Drive. אשר בחלון שנפתח, או בתפריט ההרשאות של הדף.",
+  not_granted: "צריך לאשר לדף גישה ל-Google Drive.",
+  blocked_by_policy: "הגישה ל-Google Drive חסומה בחשבון הזה.",
+  server_unavailable: "Google Drive לא זמין כרגע. נסה שוב בעוד רגע.",
+  not_in_manifest: "הפעולה הזו לא מאושרת לדף.",
+};
+async function drive(tool, input) {
+  if (!caps.mcp) throw new Error("החיבור ל-Google Drive זמין רק כשהדף פתוח ב-Claude.");
+  try { return await caps.mcp.callTool(DRIVE, tool, input); }
+  catch (e) { throw new Error(MCP_ERRORS[e?.code] || (e?.code === "tool_error" ? "Google Drive החזיר שגיאה: " + (e.message || "") : e?.message || "שגיאה בחיבור ל-Google Drive")); }
+}
+function resultText(r) {
+  const p = r?.payload;
+  if (typeof p === "string") return p;
+  if (p && typeof p === "object") for (const k of ["content", "text", "fileContent", "body"]) if (typeof p[k] === "string") return p[k];
+  const blocks = (r?.content || []).filter((b) => b.type === "text").map((b) => b.text);
+  if (blocks.length) return blocks.join("\n");
+  return p ? JSON.stringify(p) : "";
+}
+
+async function saveFile(filename, data) {
+  if (!caps.downloads) throw new Error("הורדת קבצים זמינה רק כשהדף פתוח ב-Claude.");
+  try { await caps.downloads.save({ filename, data }); return true; }
+  catch (e) { if (e?.code === "declined") return false; throw new Error(e?.code === "rate_limited" ? "חלון שמירה כבר פתוח. סגור אותו ונסה שוב." : "השמירה נכשלה: " + (e?.message || e?.code)); }
+}
+
+/* =====================================================================
+   Data store (per-user private subtree: data/users/<id>/…)
+   ===================================================================== */
+const COLLS = ["courses", "lessons", "cards", "attempts", "exams"];
+const root = () => caps.db.doc(`data/users/${caps.uid}/root`);
+const col = (n) => root().collection(n);
+const put = (n, id, data) => col(n).doc(id).set(data);
+const patch = (n, id, data) => col(n).doc(id).update(data);
+const del = (n, id) => col(n).doc(id).delete();
+
+function useStore(ready) {
+  const [s, set] = useState({ loaded: false, courses: [], lessons: [], cards: [], attempts: [], exams: [], settings: {}, slow: false });
+  useEffect(() => {
+    if (!ready) return;
+    const seen = new Set();
+    const timer = setTimeout(() => set((x) => ({ ...x, slow: true })), 10000);
+    const unsubs = COLLS.map((n) => col(n).onSnapshot(
+      (snap) => {
+        seen.add(n);
+        const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        set((x) => ({ ...x, [n]: rows, loaded: seen.size >= COLLS.length, slow: seen.size >= COLLS.length ? false : x.slow }));
+        if (seen.size >= COLLS.length) clearTimeout(timer);
+      },
+      (e) => set((x) => ({ ...x, error: e?.message || e?.code })),
+    ));
+    unsubs.push(col("settings").doc("main").onSnapshot((d) => set((x) => ({ ...x, settings: d.exists ? d.data() : {} }))));
+    return () => { clearTimeout(timer); unsubs.forEach((u) => u()); };
+  }, [ready]);
+  return s;
+}
+
+/* Large text (transcripts, past exams) is stored in ≤100KB pieces. */
+async function saveText(coll, ownerId, text) {
+  const parts = splitByBytes(text, 100000);
+  for (let i = 0; i < parts.length; i++) await put(coll, `${ownerId}_${i}`, { ownerId, n: i, text: parts[i] });
+  for (let i = parts.length; i < parts.length + 20; i++) {
+    const ref = col(coll).doc(`${ownerId}_${i}`); const snap = await ref.get(); if (!snap.exists) break; await ref.delete();
+  }
+  return parts.length;
+}
+async function loadText(coll, ownerId, n) {
+  const out = [];
+  for (let i = 0; i < (n || 50); i++) { const s = await col(coll).doc(`${ownerId}_${i}`).get(); if (!s.exists) break; out.push(s.data().text); }
+  return out.join("\n\n");
+}
+/* Exact-byte storage for strings that must round-trip unchanged (JSON). */
+async function saveRaw(coll, ownerId, str) {
+  const parts = []; let i = 0;
+  while (i < str.length) { let j = Math.min(str.length, i + 45000); while (j > i + 1 && bytes(str.slice(i, j)) > 100000) j = i + Math.floor((j - i) * 0.8); parts.push(str.slice(i, j)); i = j; }
+  for (let k = 0; k < parts.length; k++) await put(coll, `${ownerId}_${k}`, { ownerId, n: k, text: parts[k] });
+  for (let k = parts.length; k < parts.length + 20; k++) { const ref = col(coll).doc(`${ownerId}_${k}`); const sn = await ref.get(); if (!sn.exists) break; await ref.delete(); }
+  return parts.length;
+}
+async function loadRaw(coll, ownerId, n) {
+  const out = []; for (let k = 0; k < n; k++) { const sn = await col(coll).doc(`${ownerId}_${k}`).get(); if (!sn.exists) break; out.push(sn.data().text); }
+  return out.join("");
+}
+async function deleteText(coll, ownerId) {
+  for (let i = 0; i < 60; i++) { const ref = col(coll).doc(`${ownerId}_${i}`); const s = await ref.get(); if (!s.exists) break; await ref.delete(); }
+}
+
+/* =====================================================================
+   Study helpers: SRS, quiz sanitizing, stats
+   ===================================================================== */
+const BOX_DAYS = [0, 1, 3, 7, 14, 30];
+const reviewCard = (c, knew) => { const box = knew ? Math.min(5, (c.box || 1) + 1) : 1; return { box, due: Date.now() + (knew ? BOX_DAYS[box] * 864e5 : 10 * 6e4) }; };
+const isDue = (c) => (c.due || 0) <= Date.now();
+function cleanQuestions(qs) {
+  if (!Array.isArray(qs)) return [];
+  return qs.filter((q) => q && typeof q.question === "string" && Array.isArray(q.options) && q.options.length >= 2 && Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex < q.options.length)
+    .map((q) => ({ question: q.question, options: q.options.map(String), correctIndex: q.correctIndex, explanation: String(q.explanation || ""), topic: String(q.topic || "כללי").trim(), lessonTitle: q.lessonTitle || "" }));
+}
+function cleanOpen(qs) {
+  if (!Array.isArray(qs)) return [];
+  return qs.filter((q) => q && typeof q.question === "string").map((q) => ({ question: q.question, modelAnswer: String(q.modelAnswer || ""), rubric: Array.isArray(q.rubric) ? q.rubric.map(String) : [], topic: String(q.topic || "") }));
+}
+const shuffleQ = (q) => { const o = q.options.map((_, i) => i).sort(() => Math.random() - 0.5); return { ...q, options: o.map((i) => q.options[i]), correctIndex: o.indexOf(q.correctIndex) }; };
+const scoreOf = (qs, ans) => (qs.length ? Math.round((qs.filter((q, i) => ans[i] === q.correctIndex).length / qs.length) * 100) : 0);
+function topicStats(attempts) {
+  const m = new Map();
+  for (const a of attempts) (a.questions || []).forEach((q, i) => { const t = q.topic || "כללי"; const s = m.get(t) || { c: 0, n: 0 }; s.n++; if (a.answers?.[i] === q.correctIndex) s.c++; m.set(t, s); });
+  return [...m].map(([topic, s]) => ({ topic, c: s.c, n: s.n, pct: Math.round((s.c / s.n) * 100) })).sort((a, b) => a.pct - b.pct);
+}
+const weakTopics = (stats) => stats.filter((s) => s.n >= 2 && s.pct < 70).map((s) => s.topic);
+function mistakes(attempts, max = 20) {
+  const seen = new Set(), out = [];
+  for (const a of [...attempts].sort((x, y) => y.createdAt - x.createdAt)) (a.questions || []).forEach((q, i) => { if (a.kind !== "open" && a.answers?.[i] !== q.correctIndex && !seen.has(q.question)) { seen.add(q.question); out.push(q); } });
+  return out.slice(0, max);
+}
+function mergeTerms(terms) {
+  const m = new Map();
+  for (const t of terms || []) { const k = (t.term || "").trim().replace(/["'״׳]/g, "").toLowerCase(); if (!k) continue; const p = m.get(k); if (!p || (t.definition || "").length > (p.definition || "").length) m.set(k, { term: t.term.trim(), definition: (t.definition || "").trim() }); }
+  return [...m.values()].sort((a, b) => a.term.localeCompare(b.term, "he"));
+}
+
+/* =====================================================================
+   Prompts (Claude sees only what we send: instructions + data + format)
+   ===================================================================== */
+const BASE = `אתה עוזר לימודי מומחה שכותב בעברית ברורה ומדויקת לסטודנטים באוניברסיטה.
+- אל תמציא תוכן שלא מופיע בחומר. אם משהו לא ברור, ציין זאת.
+- מונחים מקצועיים באנגלית מותר להשאיר באנגלית לצד התרגום.
+- נוסחאות מתמטיות כתוב ב-LaTeX בתוך $...$ (או $$...$$ לנוסחה בשורה נפרדת).`;
+const TRANSCRIPT_NOTE = `התמלול נוצר אוטומטית (למשל בהקלדה קולית) ועלול להכיל שגיאות זיהוי, מילים חסרות, חזרות וחוסר פיסוק. השתמש בהקשר כדי להבין למה המרצה התכוון ותקן מונחים שזוהו לא נכון. התעלם משורות שלא קשורות לשיעור.`;
+const QUIZ_RULES = `- כל שאלה בודקת הבנה ויישום, לא רק שינון, ומכסה את הנושאים באופן מאוזן.
+- לכל שאלה בדיוק 4 תשובות, אחת נכונה בלבד, ומסיחים סבירים שמשקפים טעויות נפוצות. פזר את מיקום התשובה הנכונה.
+- בשאלות ובתשובות אין Markdown. topic: שם נושא קצר ועקבי.`;
+const J = {
+  part: `{"sections":[{"heading":"כותרת הנושא","content":"תוכן מלא ב-Markdown"}],"keyTerms":[{"term":"מושג","definition":"הגדרה"}],"takeaways":["נקודה חשובה"],"openQuestions":["משימה או נקודה לא ברורה"]}`,
+  meta: `{"title":"כותרת קצרה לשיעור","overview":"תקציר של 3-6 משפטים","keyTerms":[{"term":"","definition":""}],"takeaways":["5-10 עיקרים"],"openQuestions":[""]}`,
+  quiz: `{"questions":[{"question":"","options":["","","",""],"correctIndex":0,"explanation":"למה נכון ולמה המסיחים שגויים","topic":""}]}`,
+  cards: `{"cards":[{"front":"שאלה או מושג","back":"תשובה תמציתית"}]}`,
+  open: `{"questions":[{"question":"שאלה פתוחה","modelAnswer":"תשובה מלאה לדוגמה ב-Markdown","rubric":["רכיב שחייב להופיע בתשובה"],"topic":""}]}`,
+  grade: `{"score":75,"verdict":"משפט אחד","strengths":["מה היה טוב"],"missing":["מה חסר או שגוי"],"feedback":"הסבר קצר איך לשפר, ב-Markdown"}`,
+};
+
+const P_ = {
+  part: (c, l, i, n, text, prev) => `${BASE}
+
+אתה מסכם קטע ${i + 1} מתוך ${n} של תמלול שיעור. הסיכומים של כל הקטעים יחוברו למחברת אחת.
+קורס: ${c.name}. שיעור: ${l.title}.${c.vocabulary ? `\nמונחים נפוצים בקורס: ${c.vocabulary}` : ""}${prev?.length ? `\nהנושאים שסוכמו בקטע הקודם: ${prev.join(" · ")}` : ""}
+${TRANSCRIPT_NOTE}
+
+כללים:
+- חלק לנושאים לפי סדר הופעתם. הסיכום מלא מספיק כדי ללמוד ממנו בלי התמלול: הגדרות, הסברים, דוגמאות, נוסחאות, שלבים, ומה שהמרצה הדגיש ("זה חשוב", "זה יהיה במבחן").
+- Markdown בשדות התוכן (רשימות, **הדגשות**, טבלאות כשמתאים). אם הקטע ממשיך נושא קודם, המשך בלי לחזור.
+- אם אין בקטע תוכן לימודי, החזר רשימות ריקות.
+
+החזר JSON בלבד, במבנה:
+${J.part}
+
+<transcript>
+${text}
+</transcript>`,
+  meta: (c, l, material) => `${BASE}
+
+קיבלת את הסיכום המפורט של כל חלקי השיעור "${l.title}" בקורס "${c.name}". כתוב את השכבה העליונה של המחברת: כותרת קצרה, תקציר של כל השיעור, מושגי מפתח מאוחדים (בלי כפילויות), 5-10 הנקודות החשובות ביותר לזכור, ומשימות או נקודות פתוחות.
+החזר JSON בלבד, במבנה:
+${J.meta}
+
+<lesson_notes>
+${material}
+</lesson_notes>`,
+  quiz: (c, l, material, count) => `${BASE}
+
+כתוב מבחן אמריקאי של בדיוק ${count} שאלות שבודק הבנה של השיעור "${l.title}" בקורס "${c.name}".
+${QUIZ_RULES}
+החזר JSON בלבד, במבנה:
+${J.quiz}
+
+<lesson_notes>
+${material}
+</lesson_notes>`,
+  cards: (c, l, material, count) => `${BASE}
+
+כתוב כ-${count} כרטיסיות לחזרה מרווחת מהשיעור "${l.title}". כל כרטיסייה בודקת פריט ידע אחד: מושג והגדרה, "למה" או "מה ההבדל", שלבים, או נוסחה ומשמעותה. הצד האחורי קצר וחד.
+החזר JSON בלבד, במבנה:
+${J.cards}
+
+<lesson_notes>
+${material}
+</lesson_notes>`,
+  open: (c, title, material, count, style) => `${BASE}
+
+כתוב ${count} שאלות פתוחות, כמו שמופיעות במבחנים באוניברסיטה, על החומר של "${title}" בקורס "${c.name}". לכל שאלה: תשובה מלאה לדוגמה ומחוון של 3-5 רכיבים שתשובה טובה חייבת לכלול. שלב שאלות הסבר, השוואה, יישום על מקרה, וניתוח.${style ? `\nכתוב את השאלות בסגנון של המבחנים הקודמים בקורס:\n${style}` : ""}
+החזר JSON בלבד, במבנה:
+${J.open}
+
+<material>
+${material}
+</material>`,
+  grade: (q, answer) => `${BASE}
+
+אתה בודק תשובה של סטודנט לשאלה פתוחה, כמו מרצה הוגן ומדויק. השווה לתשובה לדוגמה ולמחוון. תן ציון 0-100, ציין מה היה טוב ומה חסר, ותן משוב קצר שמסביר איך לשפר. אם התשובה ריקה או לא קשורה, תן 0.
+השאלה: ${q.question}
+התשובה לדוגמה: ${q.modelAnswer}
+המחוון: ${(q.rubric || []).join(" | ")}
+תשובת הסטודנט:
+<answer>
+${answer}
+</answer>
+החזר JSON בלבד, במבנה:
+${J.grade}`,
+  outline: (c, digest) => `${BASE}
+
+אתה בונה את מבנה מחברת הקורס "${c.name}": פרקים לפי נושאים שמאחדים את כל השיעורים (בדרך כלל 4-12 פרקים), בסדר לימודי הגיוני.
+החזר JSON בלבד, במבנה:
+{"title":"שם המחברת","introduction":"פתיח ב-Markdown","chapters":[{"title":"","lessonNumbers":[1,2],"focus":"מה הפרק צריך לכסות"}]}
+
+<lessons>
+${digest}
+</lessons>`,
+  chapter: (c, ch, material) => `${BASE}
+
+כתוב את הפרק "${ch.title}" במחברת הקורס "${c.name}" מתוך סיכומי השיעורים שקיבלת. מה לכסות: ${ch.focus}
+איחד את החומר לטקסט רציף ומאורגן (כותרות משנה ###, רשימות, טבלאות), בלי כפילויות, ושמור על כל ההגדרות, ההסברים, הדוגמאות והנוסחאות. בסוף הוסף שורה: "מקורות: שיעורים X, Y".
+החזר JSON בלבד: {"content":"תוכן הפרק ב-Markdown"}
+
+<material>
+${material}
+</material>`,
+  examPrep: (c, material) => `${BASE}
+
+כתוב דף הכנה למבחן בקורס "${c.name}": מה הכי חשוב לדעת, הקשרים בין הנושאים, נוסחאות והגדרות שחייבים לזכור, טעויות נפוצות, ו-8-12 שאלות שסביר שיופיעו במבחן (בלי תשובות).
+החזר JSON בלבד: {"examPrep":"Markdown"}
+
+<course>
+${material}
+</course>`,
+  exam: (c, material, count, diff, weak, style) => `${BASE}
+
+כתוב סימולציית מבחן אמריקאי של בדיוק ${count} שאלות לקורס "${c.name}", ברמת קושי ${({ easy: "קלה (הבנה בסיסית)", medium: "בינונית (יישום)", hard: "קשה (שילוב נושאים, מקרים מורכבים, מסיחים קשים)" })[diff]}.
+${QUIZ_RULES}
+- לכל שאלה ציין lessonTitle: שם השיעור שממנו נלקח החומר.${weak?.length ? `\n- תן משקל גבוה לנושאים החלשים של הסטודנט: ${weak.join(", ")}` : ""}${style ? `\n- כתוב את השאלות בסגנון, במבנה ובמשקל הנושאים של המבחנים הקודמים בקורס:\n${style}` : ""}
+החזר JSON בלבד, במבנה:
+{"questions":[{"question":"","options":["","","",""],"correctIndex":0,"explanation":"","topic":"","lessonTitle":""}]}
+
+<course>
+${material}
+</course>`,
+  analyze: (c, text) => `${BASE}
+
+לפניך מבחן קודם (או כמה) בקורס "${c.name}". נתח אותו כדי שסטודנט יידע איך להתכונן: מבנה המבחן (חלקים, ניקוד, זמן אם מופיע), סוגי השאלות, הנושאים שנבדקו ומשקלם היחסי (0-100), רמת הקושי, ומה המרצה אוהב לשאול. הוסף טיפים קונקרטיים להכנה.
+החזר JSON בלבד, במבנה:
+{"summary":"2-3 משפטים","structure":"תיאור המבנה","questionTypes":["סוג שאלה"],"topics":[{"topic":"","weight":30,"note":""}],"difficulty":"","tips":["טיפ"]}
+
+<exam>
+${text}
+</exam>`,
+  solve: (c, text, material) => `${BASE}
+
+לפניך מבחן קודם בקורס "${c.name}". כתוב פתרון מודרך מלא לכל שאלה, לפי הסדר: הצג את השאלה בקצרה, את הפתרון צעד אחר צעד, ואת התשובה הסופית. בשאלות אמריקאיות הסבר גם למה המסיחים שגויים. כשאפשר, הפנה לנושא המתאים מהקורס. כתוב ב-Markdown עם כותרת ### לכל שאלה.${material ? `\n\nחומר הקורס לעיון:\n<course>\n${material}\n</course>` : ""}
+
+<exam>
+${text}
+</exam>`,
+  plan: (c, today, examDate, hours, lessons, weak, due) => `${BASE}
+
+בנה תוכנית לימוד יומית ומציאותית לקורס "${c.name}" מהיום (${today}) ועד יום המבחן (${examDate}) כולל, כ-${hours} שעות ביום. עקרונות: חזרה מרווחת, תרגול אקטיבי (מבחנים, שאלות פתוחות, כרטיסיות) ולא רק קריאה, יותר זמן לנושאים חלשים, סימולציה מלאה 2-3 ימים לפני המבחן, ויום אחרון קליל. כל יום: 2-5 משימות קונקרטיות.
+כרטיסיות שממתינות: ${due}. נושאים חלשים: ${weak.length ? weak.join(", ") : "אין עדיין נתונים"}.
+סוגי משימות: review, flashcards, quiz, open, exam, past, read, rest.
+החזר JSON בלבד, במבנה:
+{"days":[{"date":"YYYY-MM-DD","focus":"","tasks":[{"title":"","detail":"","kind":"review"}]}],"tips":[""]}
+
+<lessons>
+${lessons}
+</lessons>`,
+  ocr: () => `העתק במדויק את כל הטקסט שמופיע בתמונות (מבחן או חומר לימוד), לפי הסדר, כולל מספור שאלות, תשובות אפשריות, טבלאות ונוסחאות (נוסחאות ב-LaTeX בתוך $...$). אל תוסיף פרשנות. אם יש כמה עמודים, הפרד ביניהם בשורה "---".`,
+  chatSystem: (scope, context) => `${BASE}
+
+אתה "העוזר של הממלכה": עונה לסטודנט על שאלות על ${scope}, על סמך החומר המצורף בלבד (סיכומים, תמלולים ומבחנים קודמים).
+- ענה בעברית, ברור וקצר, עם Markdown כשזה עוזר. כשאפשר, ציין מאיזה שיעור המידע.
+- אם התשובה לא בחומר, אמור זאת, ורק אז תן הסבר כללי שמסומן "מעבר לחומר של הקורס".
+- אפשר גם לבחון את הסטודנט, להסביר בדרך אחרת ולתת דוגמאות כשהוא מבקש.
+${TRANSCRIPT_NOTE}
+
+<material>
+${context}
+</material>`,
+};
+
+/* ---------- External sections (very long lessons) ---------- */
+const sectionCache = new Map();
+async function loadSections(l) {
+  if (!l.summary?.sectionChunks) return l.summary?.sections || [];
+  const key = l.id + ":" + (l.processedAt || 0);
+  if (!sectionCache.has(key)) sectionCache.set(key, loadRaw("sections", l.id, l.summary.sectionChunks).then((t) => { try { return JSON.parse(t); } catch { return []; } }));
+  return sectionCache.get(key);
+}
+async function withSections(ls) {
+  return Promise.all(ls.map(async (l) => (l.summary?.sectionChunks ? { ...l, summary: { ...l.summary, sections: await loadSections(l) } } : l)));
+}
+function useFull(l) {
+  const [full, setFull] = useState(l.summary?.sectionChunks ? null : l);
+  useEffect(() => { if (!l.summary?.sectionChunks) { setFull(l); return; } let on = true; withSections([l]).then(([x]) => on && setFull(x)); return () => { on = false; }; }, [l]);
+  return full;
+}
+
+/* ---------- Lesson digests for context ---------- */
+function lessonDigest(l, n, full = true) {
+  const s = l.summary; if (!s) return "";
+  const out = [`# שיעור ${n}: ${l.title}`, s.overview || ""];
+  if (full) {
+    for (const sec of s.sections || []) out.push(`## ${sec.heading}\n${sec.content}`);
+    if (s.keyTerms?.length) out.push("מושגים: " + s.keyTerms.map((k) => `${k.term}: ${k.definition}`).join(" | "));
+    if (s.takeaways?.length) out.push("עיקרים: " + s.takeaways.join(" | "));
+  } else out.push("נושאים: " + (s.sections || []).map((x) => x.heading).join(" · "));
+  return out.join("\n\n");
+}
+function courseDigest(lessons, maxBytes = 180000) {
+  const sorted = [...lessons].filter((l) => l.summary).sort((a, b) => a.createdAt - b.createdAt);
+  const full = sorted.map((l, i) => lessonDigest(l, i + 1, true)).join("\n\n---\n\n");
+  if (bytes(full) <= maxBytes) return full;
+  // Too big: short form for every lesson, then full text for as many recent lessons as fit.
+  const short = sorted.map((l, i) => lessonDigest(l, i + 1, false));
+  let text = short.join("\n\n");
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const candidate = text + "\n\n---\n\n" + lessonDigest(sorted[i], i + 1, true);
+    if (bytes(candidate) > maxBytes) break; text = candidate;
+  }
+  return fitBytes(text, maxBytes);
+}
+function materialFromParts(parts) {
+  return parts.map((p) => [
+    ...(p.sections || []).map((s) => `## ${s.heading}\n${s.content}`),
+    p.keyTerms?.length ? "מושגים: " + p.keyTerms.map((k) => `${k.term}: ${k.definition}`).join(" | ") : "",
+    p.takeaways?.length ? "עיקרים: " + p.takeaways.join(" | ") : "",
+    p.openQuestions?.length ? "משימות/פתוח: " + p.openQuestions.join(" | ") : "",
+  ].filter(Boolean).join("\n\n")).join("\n\n");
+}
+function examStyle(exams) {
+  const withA = exams.filter((e) => e.analysis);
+  if (!withA.length) return "";
+  return fitBytes(withA.map((e) => `מבחן "${e.title}": ${e.analysis.summary}\nמבנה: ${e.analysis.structure}\nסוגי שאלות: ${(e.analysis.questionTypes || []).join(", ")}\nנושאים: ${(e.analysis.topics || []).map((t) => `${t.topic} (${t.weight})`).join(", ")}`).join("\n\n"), 20000);
+}
+
+/* =====================================================================
+   Lesson processing: transcript → part summaries → summary + practice
+   ===================================================================== */
+const PART_BYTES = 60000;
+const running = new Set();
+
+async function processLesson(lesson, course, onToast) {
+  if (running.has(lesson.id)) return;
+  running.add(lesson.id);
+  try {
+    const text = await loadText("transcripts", lesson.id, lesson.textParts);
+    if (!text.trim()) throw new Error("אין תמלול לשיעור הזה.");
+    const parts = splitByBytes(text, PART_BYTES);
+    const done = Array.isArray(lesson.partResults) ? [...lesson.partResults] : [];
+    for (let i = done.length; i < parts.length; i++) {
+      await patch("lessons", lesson.id, { status: "processing", progress: `מסכם חלק ${i + 1} מתוך ${parts.length}`, error: null });
+      const prev = done[i - 1]?.sections?.map((s) => s.heading);
+      const r = await askJSON(P_.part(course, lesson, i, parts.length, parts[i], prev));
+      done.push({
+        sections: (r?.sections || []).filter((s) => s?.heading).map((s) => ({ heading: String(s.heading), content: String(s.content || "") })),
+        keyTerms: (r?.keyTerms || []).filter((k) => k?.term), takeaways: (r?.takeaways || []).map(String), openQuestions: (r?.openQuestions || []).map(String),
+      });
+      await patch("lessons", lesson.id, { partResults: done });
+    }
+    const sections = done.flatMap((p) => p.sections);
+    if (!sections.length) throw new Error("לא נמצא תוכן לימודי בתמלול.");
+    await patch("lessons", lesson.id, { progress: "מאחד את הסיכום ובונה מבחן, כרטיסיות ושאלות פתוחות…" });
+    const material = fitBytes(materialFromParts(done), 190000);
+    const mins = speechMinutes(text.length);
+    const [meta, quiz] = await Promise.allSettled([
+      askJSON(P_.meta(course, lesson, material)),
+      askJSON(P_.quiz(course, lesson, material, clamp(Math.round(mins / 9), 8, 20))),
+    ]);
+    if (meta.status === "rejected") throw meta.reason;
+    const [cards, open] = await Promise.allSettled([
+      askJSON(P_.cards(course, lesson, material, clamp(Math.round(mins / 5), 10, 30)), { tier: "quick" }),
+      askJSON(P_.open(course, lesson.title, material, clamp(Math.round(mins / 30), 3, 6))),
+    ]);
+    const m = meta.value || {};
+    const summary = {
+      overview: String(m.overview || ""), sections,
+      keyTerms: mergeTerms(m.keyTerms?.length ? m.keyTerms : done.flatMap((p) => p.keyTerms)),
+      takeaways: (m.takeaways || done.flatMap((p) => p.takeaways)).map(String),
+      openQuestions: (m.openQuestions || []).map(String),
+    };
+    if (cards.status === "fulfilled") {
+      const old = await col("cards").where("lessonId", "==", lesson.id).get();
+      for (const d of old.docs) await del("cards", d.id);
+      for (const c of (cards.value?.cards || []).filter((c) => c?.front && c?.back))
+        await put("cards", newId(), { courseId: course.id, lessonId: lesson.id, front: String(c.front), back: String(c.back), box: 1, due: Date.now(), createdAt: Date.now() });
+    }
+    let sectionChunks = 0;
+    const est = bytes(JSON.stringify({ summary, q: quiz.value, o: open.value }));
+    if (est > 200000) { sectionChunks = await saveRaw("sections", lesson.id, JSON.stringify(summary.sections)); summary.sections = []; summary.sectionChunks = sectionChunks; }
+    await patch("lessons", lesson.id, {
+      status: "ready", progress: null, error: null, summary, partResults: null,
+      title: lesson.titleEdited ? lesson.title : (m.title || lesson.title),
+      quiz: quiz.status === "fulfilled" ? cleanQuestions(quiz.value?.questions) : lesson.quiz || [],
+      openQs: open.status === "fulfilled" ? cleanOpen(open.value?.questions) : lesson.openQs || [],
+      minutes: mins, processedAt: Date.now(),
+    });
+    onToast?.("השיעור סוכם, ונוצרו מבחן, כרטיסיות ושאלות פתוחות", "good");
+  } catch (e) {
+    await patch("lessons", lesson.id, { status: "error", progress: null, error: e.message || String(e) }).catch(() => {});
+    onToast?.(e.message || String(e), "bad");
+  } finally { running.delete(lesson.id); }
+}
+
+/* =====================================================================
+   File reading: txt / md / vtt / srt / docx / pdf / images
+   ===================================================================== */
+function cleanSubtitles(t) {
+  return t.replace(/^WEBVTT.*$/m, "").replace(/^\d+\s*$/gm, "").replace(/^\d\d:\d\d[:.,\d]*\s*-->.*$/gm, "").replace(/<[^>]+>/g, "").replace(/\n{2,}/g, "\n").trim();
+}
+async function readAsText(file) { return await file.text(); }
+async function docxText(file) {
+  await loadScript(LIBS.mammoth);
+  const r = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+  return r.value;
+}
+async function pdfDoc(file) {
+  await loadScript(LIBS.pdf);
+  const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker;
+  return await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+}
+async function pdfText(doc) {
+  const out = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i); const c = await page.getTextContent();
+    // pdf.js returns Hebrew runs in visual order on some files; keep items in reading order per line.
+    out.push(c.items.map((it) => it.str + (it.hasEOL ? "\n" : " ")).join(""));
+  }
+  return out.join("\n\n").replace(/[ \t]+\n/g, "\n").trim();
+}
+/** Some Hebrew PDFs store text in visual order, so extracted words come out backwards. */
+function looksReversed(t) {
+  const count = (re) => (t.match(re) || []).length;
+  const normal = count(/(^|\s)(של|את|על|לא|הוא|היא|מה|גם|כי|אם|עם|זה)(?=\s|$)/g);
+  const reversed = count(/(^|\s)(לש|תא|לע|אל|אוה|איה|המ|םג|יכ|םא|םע|הז)(?=\s|$)/g);
+  return hasHeb(t) && reversed > normal;
+}
+async function pdfImages(doc, maxPages) {
+  const blobs = [];
+  for (let i = 1; i <= Math.min(doc.numPages, maxPages); i++) {
+    const page = await doc.getPage(i); const vp = page.getViewport({ scale: 1.6 });
+    const canvas = document.createElement("canvas"); canvas.width = vp.width; canvas.height = vp.height;
+    await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+    blobs.push(await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.85)));
+  }
+  return blobs;
+}
+async function ocrImages(blobs) {
+  const lim = await caps.sample?.limits?.().catch(() => null);
+  if (!lim?.images) throw new Error("שליחת תמונות ל-Claude לא זמינה כאן. העלה קובץ עם טקסט (Word או PDF שאפשר לסמן בו טקסט).");
+  const max = lim.images.maxCount || 5; const out = [];
+  for (let i = 0; i < blobs.length; i += max) out.push(await askText(P_.ocr(), { images: blobs.slice(i, i + max) }));
+  return out.join("\n\n---\n\n");
+}
+/** Turns any supported file into text; scanned PDFs and images go through Claude's vision. */
+async function fileToText(file, onStage) {
+  const name = file.name.toLowerCase();
+  if (/\.(txt|md)$/.test(name) || file.type.startsWith("text/") && !/\.(vtt|srt)$/.test(name)) return readAsText(file);
+  if (/\.(vtt|srt)$/.test(name)) return cleanSubtitles(await readAsText(file));
+  if (/\.docx$/.test(name)) { onStage?.("קורא את קובץ ה-Word…"); return docxText(file); }
+  if (/\.pdf$/.test(name)) {
+    onStage?.("קורא את ה-PDF…");
+    const doc = await pdfDoc(file); const t = await pdfText(doc);
+    if (t.replace(/\s/g, "").length > 200 * Math.min(doc.numPages, 3) && !looksReversed(t)) return t;
+    onStage?.("Claude קורא את עמודי ה-PDF…");
+    return ocrImages(await pdfImages(doc, 12));
+  }
+  if (file.type.startsWith("image/")) { onStage?.("Claude קורא את התמונה…"); return ocrImages([file]); }
+  throw new Error("סוג קובץ לא נתמך. אפשר: TXT, Word, PDF, תמונה, VTT או SRT.");
+}
+
+/* =====================================================================
+   Word export (RTL, David 12) — docx library loaded on demand
+   ===================================================================== */
+let docxLib = null;
+async function getDocx() { return (docxLib ??= await import(LIBS.docx)); }
+
+/** Word has no LaTeX: turn common math into readable plain text (E = (%ΔQ)/(%ΔP)). */
+function texToText(t) {
+  const SYM = { alpha: "α", beta: "β", gamma: "γ", delta: "δ", Delta: "Δ", epsilon: "ε", theta: "θ", lambda: "λ", mu: "μ", pi: "π", rho: "ρ", sigma: "σ", Sigma: "Σ", tau: "τ", phi: "φ", omega: "ω", Omega: "Ω",
+    cdot: "·", times: "×", div: "÷", pm: "±", le: "≤", leq: "≤", ge: "≥", geq: "≥", neq: "≠", ne: "≠", approx: "≈", infty: "∞", to: "→", rightarrow: "→", Rightarrow: "⇒", leftarrow: "←", sum: "Σ", int: "∫", partial: "∂", in: "∈", forall: "∀", exists: "∃", cup: "∪", cap: "∩", ldots: "…", cdots: "⋯" };
+  let x = String(t);
+  for (let i = 0; i < 6; i++) {
+    const before = x;
+    x = x.replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, (_, a, b) => `(${a})/(${b})`)
+      .replace(/\\sqrt\{([^{}]*)\}/g, "√($1)")
+      .replace(/\\(?:text|mathrm|mathbf|operatorname)\{([^{}]*)\}/g, "$1")
+      .replace(/\^\{([^{}]*)\}/g, "^$1").replace(/_\{([^{}]*)\}/g, "_$1");
+    if (x === before) break;
+  }
+  return x.replace(/\\left|\\right/g, "").replace(/\\%/g, "%").replace(/\\,|\\;|\\!|\\ /g, " ")
+    .replace(/\\([A-Za-z]+)( ?)/g, (m, w, sp) => (SYM[w] ? SYM[w] + (/^[a-zA-Z]+$/.test(w) && /[α-ωΑ-Ω]/.test(SYM[w]) ? "" : sp) : m))
+    .replace(/\^\{([^{}]*)\}/g, "^$1").replace(/_\{([^{}]*)\}/g, "_$1")
+    .replace(/\(([A-Za-z0-9α-ωΔΣΩ%.]+)\)\/\(([A-Za-z0-9α-ωΔΣΩ%.]+)\)/g, "$1/$2")
+    .replace(/[{}]/g, "").replace(/\s+/g, " ").trim();
+}
+
+async function buildDocx({ headerText, titlePage, sections }) {
+  const d = await getDocx();
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, PageBreak, Header, Footer, PageNumber, LevelFormat } = d;
+  const FONT = { ascii: "David", hAnsi: "David", cs: "David", eastAsia: "David" };
+  const MONO = { ascii: "Consolas", hAnsi: "Consolas", cs: "David", eastAsia: "Consolas" };
+  const PLUM = "3D2466", GOLD = "A87A10", MUTED = "6A6280", SOFT = "EFE9F8", LINE = "D9D2E9";
+  const LRE = "\u202A", PDF = "\u202C";
+  const run = (text, o = {}) => {
+    const rtl = hasHeb(text); const size = o.size || 24;
+    return new TextRun({ text: rtl ? text : `${LRE}${text}${PDF}`, font: FONT, size, sizeComplexScript: size, rightToLeft: rtl, ...(rtl ? { language: { value: "he-IL", bidirectional: "he-IL" } } : {}), ...o, ...(o.bold ? { boldComplexScript: true } : {}), ...(o.italics ? { italicsComplexScript: true } : {}) });
+  };
+  const para = (children, o = {}) => new Paragraph({ bidirectional: true, alignment: AlignmentType.START, children, ...o });
+  const H = [HeadingLevel.HEADING_1, HeadingLevel.HEADING_2, HeadingLevel.HEADING_3, HeadingLevel.HEADING_4];
+  const borders = Object.fromEntries(["top", "bottom", "left", "right", "insideHorizontal", "insideVertical"].map((k) => [k, { style: BorderStyle.SINGLE, size: 4, color: LINE }]));
+  const cell = (children, head, w) => new TableCell({ width: { size: w, type: WidthType.PERCENTAGE }, shading: head ? { type: ShadingType.CLEAR, color: "auto", fill: SOFT } : undefined, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: [para(children, { spacing: { after: 0 } })] });
+  let listInst = 0;
+  const inline = (tokens, st = {}) => {
+    const out = [];
+    for (const t of tokens || []) {
+      if (t.type === "text" || t.type === "escape") { if (t.tokens?.length) out.push(...inline(t.tokens, st)); else out.push(run(decode(t.text).replace(/\n/g, " "), st)); }
+      else if (t.type === "strong") out.push(...inline(t.tokens, { ...st, bold: true, color: st.color || PLUM }));
+      else if (t.type === "em") out.push(...inline(t.tokens, { ...st, italics: true }));
+      else if (t.type === "del") out.push(...inline(t.tokens, { ...st, strike: true }));
+      else if (t.type === "codespan") out.push(new TextRun({ text: `${LRE}${decode(t.text)}${PDF}`, font: MONO, size: 22, sizeComplexScript: 22, shading: { type: ShadingType.CLEAR, color: "auto", fill: SOFT } }));
+      else if (t.type === "link") out.push(...inline(t.tokens, { ...st, color: PLUM, underline: {} }));
+      else if (t.type === "br") out.push(new TextRun({ break: 1 }));
+      else if (t.tokens) out.push(...inline(t.tokens, st));
+      else if (t.text) out.push(run(decode(t.text), st));
+    }
+    return out;
+  };
+  const decode = (s) => String(s).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  const mathify = (md) => String(md || "").replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => "`" + texToText(t.trim()) + "`").replace(/(^|[^\\\d$])\$([^\s$][^$\n]*?[^\s$]|[^\s$])\$(?!\d)/g, (_, p, t) => p + "`" + texToText(t) + "`");
+  const blocks = (md, offset = 1) => {
+    const toks = window.marked.lexer(mathify(md));
+    const walk = (list, level = 0) => {
+      const out = [];
+      for (const t of list) {
+        if (t.type === "heading") out.push(para(inline(t.tokens), { heading: H[Math.min(3, t.depth - 1 + offset)] }));
+        else if (t.type === "paragraph") out.push(para(inline(t.tokens)));
+        else if (t.type === "list") {
+          const inst = ++listInst;
+          for (const it of t.items) {
+            const first = it.tokens.find((x) => x.type === "text" || x.type === "paragraph");
+            out.push(para(inline(first?.tokens || [{ type: "text", text: first?.text || "" }]), { numbering: { reference: t.ordered ? "num" : "bul", level: Math.min(level, 2), instance: inst }, spacing: { after: 60 } }));
+            const nested = it.tokens.filter((x) => x !== first && x.type !== "space");
+            out.push(...walk(nested, level + 1));
+          }
+        } else if (t.type === "table") {
+          const cols = t.header.length; const w = Math.floor(100 / cols);
+          out.push(new Table({ visuallyRightToLeft: true, width: { size: 100, type: WidthType.PERCENTAGE }, borders, rows: [
+            new TableRow({ tableHeader: true, children: t.header.map((h) => cell(inline(h.tokens, { bold: true }), true, w)) }),
+            ...t.rows.map((r) => new TableRow({ children: r.map((c) => cell(inline(c.tokens), false, w)) })),
+          ] }));
+        } else if (t.type === "blockquote") {
+          for (const b of t.tokens.filter((x) => x.type === "paragraph")) out.push(para(inline(b.tokens, { color: MUTED }), { indent: { start: 360 }, border: { right: { style: BorderStyle.SINGLE, size: 18, color: GOLD, space: 8 } } }));
+        } else if (t.type === "code") {
+          t.text.split("\n").forEach((line, i, all) => out.push(new Paragraph({ bidirectional: false, alignment: AlignmentType.LEFT, shading: { type: ShadingType.CLEAR, color: "auto", fill: SOFT }, spacing: { before: i ? 0 : 140, after: i === all.length - 1 ? 140 : 0 }, children: [new TextRun({ text: line || " ", font: MONO, size: 20, sizeComplexScript: 20 })] })));
+        } else if (t.type === "hr") out.push(para([], { border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: LINE, space: 4 } } }));
+        else if (t.type === "text") out.push(para(inline(t.tokens || [{ type: "text", text: t.text }])));
+      }
+      return out;
+    };
+    return walk(toks);
+  };
+  const h = (text, level, extra) => para([run(text), ...(extra ? [run("  " + extra, { size: 20, color: MUTED })] : [])], { heading: H[level] });
+  const bullets = (items) => { const inst = ++listInst; return items.map((t) => para([run(String(t))], { numbering: { reference: "bul", level: 0, instance: inst }, spacing: { after: 60 } })); };
+  const termsTable = (terms) => new Table({ visuallyRightToLeft: true, width: { size: 100, type: WidthType.PERCENTAGE }, borders, rows: [
+    new TableRow({ tableHeader: true, children: [cell([run("מושג", { bold: true })], true, 28), cell([run("הגדרה", { bold: true })], true, 72)] }),
+    ...terms.map((k) => new TableRow({ cantSplit: true, children: [cell([run(k.term, { bold: true })], false, 28), cell([run(k.definition || "")], false, 72)] })),
+  ] });
+  const box = (children) => para(children, { shading: { type: ShadingType.CLEAR, color: "auto", fill: SOFT }, border: { right: { style: BorderStyle.SINGLE, size: 24, color: PLUM, space: 6 } }, spacing: { before: 120, after: 200 } });
+  const pageBreak = () => para([new PageBreak()]);
+  const api = { run, para, h, blocks, bullets, termsTable, box, pageBreak, Table, TableRow, cell, borders, WidthType, AlignmentType, MUTED, GOLD, PLUM };
+
+  const children = [];
+  if (titlePage) children.push(
+    para([], { spacing: { before: 2400 } }),
+    para([run("הממלכה של גל", { color: GOLD, size: 28, bold: true })], { alignment: AlignmentType.CENTER }),
+    para([run(titlePage.kicker, { color: MUTED, size: 28 })], { alignment: AlignmentType.CENTER, spacing: { before: 400 } }),
+    para([run(titlePage.title, { size: 64, bold: true, color: PLUM })], { alignment: AlignmentType.CENTER, spacing: { before: 200, after: 400 } }),
+    ...(titlePage.lines || []).map((l) => para([run(l, { color: MUTED })], { alignment: AlignmentType.CENTER, spacing: { after: 80 } })),
+    pageBreak(),
+  );
+  for (const s of sections) children.push(...s(api));
+  const heading = (size, color, before) => ({ run: { font: FONT, size, sizeComplexScript: size, bold: true, boldComplexScript: true, color }, paragraph: { spacing: { before, after: 140 }, keepNext: true, keepLines: true } });
+  const doc = new Document({
+    creator: "הממלכה של גל", title: headerText,
+    styles: { default: {
+      document: { run: { font: FONT, size: 24, sizeComplexScript: 24, language: { value: "he-IL", bidirectional: "he-IL" } }, paragraph: { spacing: { after: 120, line: 312 } } },
+      heading1: heading(40, PLUM, 480), heading2: heading(31, PLUM, 320), heading3: heading(26, "2F2347", 240), heading4: heading(24, "2F2347", 200),
+    } },
+    numbering: { config: [
+      { reference: "bul", levels: [0, 1, 2].map((level) => ({ level, format: LevelFormat.BULLET, text: ["•", "◦", "▪"][level], alignment: AlignmentType.START, style: { paragraph: { indent: { start: 540 + level * 360, hanging: 300 } } } })) },
+      { reference: "num", levels: [0, 1, 2].map((level) => ({ level, format: [LevelFormat.DECIMAL, LevelFormat.HEBREW1, LevelFormat.LOWER_LETTER][level], text: `%${level + 1}.`, alignment: AlignmentType.START, style: { paragraph: { indent: { start: 540 + level * 360, hanging: 360 } } } })) },
+    ] },
+    sections: [{
+      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1300, bottom: 1300, left: 1250, right: 1250, header: 600, footer: 600 } }, titlePage: !!titlePage },
+      headers: { default: new Header({ children: [para([run(headerText, { color: MUTED, size: 18 })], { border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LINE, space: 4 } } })] }) },
+      footers: { default: new Footer({ children: [para([new TextRun({ children: ["עמוד ", PageNumber.CURRENT, " מתוך ", PageNumber.TOTAL_PAGES], font: FONT, size: 18, sizeComplexScript: 18, color: MUTED, rightToLeft: true })], { alignment: AlignmentType.CENTER })] }) },
+      children,
+    }],
+  });
+  return Packer.toBlob(doc);
+}
+
+const lessonSection = (l, n, courseName) => (a) => {
+  const s = l.summary; if (!s) return [];
+  const out = [a.h(n ? `שיעור ${n}: ${l.title}` : l.title, 0), a.para([a.run(`${courseName ? courseName + " · " : ""}${fmtDate(l.createdAt)}${l.minutes ? ` · כ-${l.minutes} דק׳` : ""}`, { color: a.MUTED, size: 20 })], { spacing: { after: 160 } })];
+  if (s.overview) out.push(a.box([a.run("בקצרה: ", { bold: true, color: a.PLUM }), a.run(s.overview)]));
+  for (const sec of s.sections || []) { out.push(a.h(sec.heading, 1)); out.push(...a.blocks(sec.content, 2)); }
+  if (s.takeaways?.length) { out.push(a.h("הכי חשוב לזכור", 1)); out.push(...a.bullets(s.takeaways)); }
+  if (s.keyTerms?.length) { out.push(a.h("מושגי מפתח", 1)); out.push(a.termsTable(s.keyTerms)); }
+  if (s.openQuestions?.length) { out.push(a.h("משימות ונקודות פתוחות", 1)); out.push(...a.bullets(s.openQuestions)); }
+  return out;
+};
+const practiceSection = (lessons) => (a) => {
+  const withQ = lessons.map((l, i) => ({ l, n: i + 1, qs: l.quiz || [], open: l.openQs || [] })).filter((x) => x.qs.length || x.open.length);
+  if (!withQ.length) return [];
+  const out = [a.pageBreak(), a.para([a.run("נספח: שאלות תרגול", { size: 44, bold: true, color: a.GOLD })], { alignment: a.AlignmentType.CENTER, spacing: { before: 400, after: 200 } }),
+    a.para([a.run("נסו לענות בלי להציץ. מפתח התשובות ותשובות לדוגמה נמצאים בסוף הנספח.", { color: a.MUTED })], { alignment: a.AlignmentType.CENTER, spacing: { after: 300 } })];
+  for (const { l, n, qs, open } of withQ) {
+    out.push(a.h(`שיעור ${n}: ${l.title}`, 1));
+    qs.forEach((q, i) => {
+      out.push(a.para([a.run(`${i + 1}. `, { bold: true }), a.run(q.question, { bold: true })], { spacing: { before: 160, after: 60 }, keepNext: true }));
+      q.options.forEach((o, oi) => out.push(a.para([a.run(`${LETTERS[oi]}. `, { color: a.MUTED }), a.run(o)], { indent: { start: 420 }, spacing: { after: 20 }, keepNext: oi < q.options.length - 1 })));
+    });
+    if (open.length) { out.push(a.h("שאלות פתוחות", 2)); open.forEach((q, i) => out.push(a.para([a.run(`${i + 1}. `, { bold: true }), a.run(q.question)], { spacing: { before: 120, after: 60 } }))); }
+  }
+  out.push(a.pageBreak(), a.h("מפתח תשובות", 0));
+  for (const { l, n, qs, open } of withQ) {
+    out.push(a.h(`שיעור ${n}: ${l.title}`, 2));
+    if (qs.length) out.push(new a.Table({ visuallyRightToLeft: true, width: { size: 100, type: a.WidthType.PERCENTAGE }, borders: a.borders, rows: [
+      new a.TableRow({ tableHeader: true, children: [a.cell([a.run("שאלה", { bold: true })], true, 10), a.cell([a.run("תשובה", { bold: true })], true, 12), a.cell([a.run("הסבר", { bold: true })], true, 78)] }),
+      ...qs.map((q, i) => new a.TableRow({ cantSplit: true, children: [a.cell([a.run(String(i + 1))], false, 10), a.cell([a.run(LETTERS[q.correctIndex] || String(q.correctIndex + 1), { bold: true, color: a.PLUM })], false, 12), a.cell([a.run(q.explanation || "")], false, 78)] })),
+    ] }));
+    open.forEach((q, i) => { out.push(a.para([a.run(`שאלה פתוחה ${i + 1}: `, { bold: true }), a.run(q.question)], { spacing: { before: 200 } })); out.push(...a.blocks(q.modelAnswer, 3)); });
+  }
+  return out;
+};
+
+async function blobToBase64(blob) {
+  const buf = new Uint8Array(await blob.arrayBuffer()); let s = "";
+  for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+async function ensureDriveFolder(settings) {
+  if (settings?.driveFolderId) return settings.driveFolderId;
+  const r = await drive("create_file", { title: "הממלכה של גל", contentMimeType: "application/vnd.google-apps.folder" });
+  const id = r?.payload?.id; if (!id) throw new Error("לא הצלחתי ליצור תיקייה בדרייב.");
+  await put("settings", "main", { ...(settings || {}), driveFolderId: id });
+  return id;
+}
+async function saveDocxToDrive(blob, title, settings) {
+  const parentId = await ensureDriveFolder(settings);
+  const input = { title, base64Content: await blobToBase64(blob), contentMimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", disableConversionToGoogleType: true, parentId };
+  try { return (await drive("create_file", input))?.payload; }
+  catch (e) { // folder was deleted in Drive: make a new one once
+    await put("settings", "main", { ...(settings || {}), driveFolderId: null });
+    const id = await ensureDriveFolder({ ...(settings || {}), driveFolderId: null });
+    return (await drive("create_file", { ...input, parentId: id }))?.payload;
+  }
+}
+
+/* =====================================================================
+   UI primitives
+   ===================================================================== */
+let pushToast = () => {};
+function Toasts() {
+  const [list, setList] = useState([]);
+  pushToast = (text, tone = "") => { const id = Math.random(); setList((l) => [...l, { id, text, tone }]); setTimeout(() => setList((l) => l.filter((t) => t.id !== id)), tone === "bad" ? 7000 : 4000); };
+  return html`<div class="toast-host" aria-live="polite">${list.map((t) => html`<div class=${"toast " + t.tone} key=${t.id}>${t.text}</div>`)}</div>`;
+}
+function Modal({ title, onClose, children }) {
+  useEffect(() => { const h = (e) => e.key === "Escape" && onClose(); addEventListener("keydown", h); return () => removeEventListener("keydown", h); }, []);
+  return html`<div class="overlay" onClick=${(e) => e.target === e.currentTarget && onClose()}><div class="dialog" role="dialog" aria-modal="true" aria-label=${title}>
+    <div class="row between"><h2>${title}</h2><button class="btn quiet sm" onClick=${onClose} aria-label="סגירה"><${Icon} n="x" /></button></div>${children}</div></div>`;
+}
+function Confirm({ title, text, action, onYes, onClose, danger = true }) {
+  const [busy, setBusy] = useState(false);
+  return html`<${Modal} title=${title} onClose=${onClose}><p class="muted">${text}</p><div class="row">
+    <button class=${"btn " + (danger ? "danger" : "primary")} disabled=${busy} onClick=${async () => { setBusy(true); try { await onYes(); onClose(); } finally { setBusy(false); } }}>${action}</button>
+    <button class="btn ghost" onClick=${onClose}>ביטול</button></div><//>`;
+}
+const Bar = ({ v, indet }) => html`<div class=${"bar" + (indet ? " indet" : "")} role="progressbar"><i style=${{ width: `${Math.round((v || 0) * 100)}%` }}></i></div>`;
+const Empty = ({ icon, title, text, children }) => html`<div class="card empty"><div class="glyph"><${Icon} n=${icon} s=${26} /></div><h3>${title}</h3>${text && html`<p class="muted" style="max-width:460px">${text}</p>`}${children}</div>`;
+function Tabs({ tabs, value, onChange }) {
+  return html`<div class="tabs" role="tablist">${tabs.map((t) => html`<button role="tab" class="tab" aria-selected=${value === t[0]} onClick=${() => onChange(t[0])}>${t[1]}</button>`)}</div>`;
+}
+const StatusChip = ({ s }) => html`<span class=${"chip " + ({ ready: "good", processing: "warn", error: "bad", new: "" })[s || "new"]}>${({ ready: "מוכן", processing: "מסכם…", error: "דורש טיפול", new: "ממתין לסיכום" })[s || "new"]}</span>`;
+function Busy({ label }) { return html`<span class="row small muted"><span style="width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--plum);border-radius:99px;animation:spin .8s linear infinite;display:inline-block"></span>${label}</span>`; }
+
+/* =====================================================================
+   Router (hash: #c-<id>, #l-<id>, #review, #search, #help, #prefs)
+   ===================================================================== */
+function useRoute() {
+  const read = () => (location.hash || "").replace(/^#/, "");
+  const [r, setR] = useState(read());
+  useEffect(() => { const h = () => { setR(read()); scrollTo(0, 0); }; addEventListener("hashchange", h); return () => removeEventListener("hashchange", h); }, []);
+  return r;
+}
+const go = (h) => { location.hash = h; };
+
+/* =====================================================================
+   App
+   ===================================================================== */
+function App() {
+  const [boot, setBoot] = useState("loading");
+  useEffect(() => { bootCaps().then(setBoot); }, []);
+  const store = useStore(boot === "ok");
+  const route = useRoute();
+  if (boot === "loading") return html`<div class="wrap" style="padding-block:40px"><${Busy} label="טוען את הממלכה…" /></div>`;
+  if (boot !== "ok") return html`<${Outside} reason=${boot} />`;
+  let view;
+  if (route.startsWith("c-")) view = html`<${CourseView} id=${route.slice(2)} store=${store} />`;
+  else if (route.startsWith("l-")) view = html`<${LessonView} id=${route.slice(2)} store=${store} />`;
+  else if (route === "review") view = html`<${ReviewView} store=${store} />`;
+  else if (route === "search") view = html`<${SearchView} store=${store} />`;
+  else if (route === "help") view = html`<${HelpView} />`;
+  else if (route === "prefs") view = html`<${PrefsView} store=${store} />`;
+  else view = html`<${Home} store=${store} />`;
+  const due = store.cards.filter(isDue).length;
+  const cur = route.split("-")[0];
+  return html`
+    <header class="top"><div class="wrap">
+      <a class="brand" href="#"><span class="brand-mark"><${Icon} n="crown" s=${20} /></span><span><b>הממלכה של גל</b><small class="muted tiny" style="display:block;margin-top:-4px">סיכומים · תרגול · מבחנים</small></span></a>
+      <nav class="nav" aria-label="ניווט">
+        <a href="#" aria-current=${!route || cur === "c" || cur === "l" ? "page" : undefined}><${Icon} n="home" />בית</a>
+        <a href="#review" aria-current=${route === "review" ? "page" : undefined}><${Icon} n="cards" />חזרה${due ? ` (${due})` : ""}</a>
+        <a href="#search" aria-current=${route === "search" ? "page" : undefined}><${Icon} n="search" />חיפוש</a>
+        <a href="#help" aria-current=${route === "help" ? "page" : undefined}><${Icon} n="help" />מדריך</a>
+        <a href="#prefs" aria-current=${route === "prefs" ? "page" : undefined}><${Icon} n="gear" />הגדרות</a>
+      </nav>
+    </div></header>
+    <main class="wrap">
+      ${store.error && html`<div class="notice bad">לא הצלחתי לגשת לנתונים: ${store.error}</div>`}
+      ${store.slow && !store.loaded && html`<div class="notice">הנתונים עדיין נטענים. אם זה נמשך, בדוק את החיבור לאינטרנט.</div>`}
+      ${view}
+    </main>
+    <${Toasts} />`;
+}
+
+function Outside({ reason }) {
+  const msg = {
+    outside: "האתר הזה עובד בתוך Claude: פתח את הקישור שלו ב-claude.ai, כשאתה מחובר לחשבון שלך.",
+    nodb: "הדף לא קיבל גישה לשמירת נתונים. רענן את הדף, או פתח אותו ב-claude.ai.",
+    signedout: "כדי לשמור קורסים וסיכומים צריך להיות מחובר לחשבון Claude. התחבר ורענן את הדף.",
+  }[reason];
+  return html`<main class="wrap" style="padding-block:48px"><div class="card empty"><div class="glyph"><${Icon} n="crown" s=${28} /></div><h1>הממלכה של גל</h1><p class="muted" style="max-width:480px">${msg}</p></div></main>`;
+}
+
+/* ---------------- Home ---------------- */
+function Home({ store }) {
+  const [form, setForm] = useState(false);
+  const { courses, lessons, cards } = store;
+  if (!store.loaded) return html`<${Busy} label="טוען…" />`;
+  const due = cards.filter(isDue);
+  const ready = lessons.filter((l) => l.status === "ready");
+  const active = lessons.filter((l) => l.status === "processing" || l.status === "error");
+  const exams = courses.filter((c) => c.examDate && daysUntil(c.examDate) >= 0).sort((a, b) => a.examDate.localeCompare(b.examDate));
+  return html`
+    <section class="row between" style="align-items:end">
+      <div><p class="muted">${greeting()},</p><h1>${caps.name || "ברוכים הבאים"}</h1></div>
+      <div class="row"><button class="btn ghost" onClick=${() => setForm(true)}><${Icon} n="plus" />קורס חדש</button></div>
+    </section>
+    ${!courses.length ? html`
+      <div class="card stack" style="padding:28px">
+        <h2>ברוכים הבאים לממלכה</h2>
+        <p class="muted">כאן כל שיעור הופך למחברת: סיכום מלא לפי נושאים, מבחן אמריקאי, שאלות פתוחות עם בדיקה, כרטיסיות לחזרה, ומחברת קורס שאפשר להוריד ל-Word. הכל רץ בתוך Claude, בלי שרתים ובלי תשלום נוסף.</p>
+        <ol class="steps">
+          <li><span><b>יוצרים קורס</b> (למשל "מבוא לכלכלה").</span></li>
+          <li><span><b>מוסיפים שיעור:</b> מייבאים תמלול מגוגל דרייב, מעלים קובץ, או מדביקים טקסט. <a href="#help">איך מתמללים שיעור בחינם?</a></span></li>
+          <li><span><b>לוחצים "סכם"</b> ומקבלים סיכום, מבחן, כרטיסיות ושאלות פתוחות.</span></li>
+        </ol>
+        <div><button class="btn gold lg" onClick=${() => setForm(true)}>יצירת קורס ראשון</button></div>
+      </div>` : html`
+      <section class="grid3">
+        <div class="card stat"><b>${courses.length}</b><span class="muted small">קורסים</span></div>
+        <div class="card stat"><b>${ready.length}</b><span class="muted small">שיעורים מסוכמים</span></div>
+        <a class="card stat" href="#review" style="text-decoration:none;color:inherit"><b style="color:var(--gold)">${due.length}</b><span class="muted small">כרטיסיות לחזרה היום</span></a>
+      </section>
+      ${active.length > 0 && html`<section class="stack"><h2>בעבודה</h2>${active.map((l) => html`<a class="card tight list-item" href=${"#l-" + l.id}><div class="grow"><b class="truncate" style="display:block">${l.title}</b><span class="small muted">${l.status === "error" ? l.error : l.progress || ""}</span></div><${StatusChip} s=${l.status} /></a>`)}</section>`}
+      ${exams.length > 0 && html`<section class="stack"><h2>מבחנים קרובים</h2><div class="grid2">${exams.map((c) => { const d = daysUntil(c.examDate); const tot = (c.plan?.days || []).reduce((s, x) => s + x.tasks.length, 0); const done = (c.planDone || []).length; return html`<a class="card tight list-item" href=${"#c-" + c.id}><div class="num" style="background:var(--gold-soft);color:var(--gold);width:54px;height:54px;flex-direction:column;line-height:1"><b>${d}</b><span class="tiny">ימים</span></div><div class="grow stack" style="gap:4px"><b>${c.name}</b><span class="small muted">${fmtDate(c.examDate + "T00:00:00")}</span>${tot ? html`<${Bar} v=${done / tot} /><span class="tiny muted">${done}/${tot} משימות בתוכנית</span>` : html`<span class="small" style="color:var(--plum)">בנה תוכנית לימוד</span>`}</div></a>`; })}</div></section>`}
+      <section class="stack"><h2>הקורסים שלי</h2><div class="grid2">
+        ${[...courses].sort((a, b) => a.createdAt - b.createdAt).map((c) => { const ls = lessons.filter((l) => l.courseId === c.id); const cd = due.filter((x) => x.courseId === c.id).length; const d = c.examDate ? daysUntil(c.examDate) : null; return html`
+          <a class="card course-card" href=${"#c-" + c.id}><span class="stripe" style=${{ background: c.color }}></span>
+            <h3>${c.name}</h3><span class="small muted">${ls.length} שיעורים · ${ls.filter((l) => l.status === "ready").length} מסוכמים</span>
+            <div class="row" style="gap:6px">${cd > 0 && html`<span class="chip gold">${cd} כרטיסיות לחזרה</span>`}${d !== null && d >= 0 && html`<span class="chip">מבחן בעוד ${d} ימים</span>`}${c.notebook && html`<span class="chip">יש מחברת</span>`}</div></a>`; })}
+      </div></section>`}
+    ${form && html`<${CourseForm} onClose=${() => setForm(false)} onSaved=${(id) => go("c-" + id)} count=${courses.length} />`}`;
+}
+
+function CourseForm({ course, onClose, onSaved, count = 0 }) {
+  const [name, setName] = useState(course?.name || "");
+  const [vocab, setVocab] = useState(course?.vocabulary || "");
+  const [color, setColor] = useState(course?.color || COLORS[count % COLORS.length]);
+  const [exam, setExam] = useState(course?.examDate || "");
+  const [busy, setBusy] = useState(false);
+  async function save(e) {
+    e.preventDefault(); if (!name.trim()) return; setBusy(true);
+    try {
+      const id = course?.id || newId();
+      const data = { name: name.trim(), vocabulary: vocab.trim(), color, examDate: exam || null };
+      if (course) await patch("courses", id, data); else await put("courses", id, { ...data, createdAt: Date.now() });
+      onSaved?.(id); onClose();
+    } catch (err) { pushToast("השמירה נכשלה: " + (err.message || err.code), "bad"); } finally { setBusy(false); }
+  }
+  return html`<${Modal} title=${course ? "עריכת קורס" : "קורס חדש"} onClose=${onClose}><form class="stack" onSubmit=${save}>
+    <div><label class="lbl" for="cf-name">שם הקורס</label><input id="cf-name" class="input" required maxlength="120" value=${name} onInput=${(e) => setName(e.target.value)} placeholder="לדוגמה: מבוא לכלכלה" autofocus /></div>
+    <div><label class="lbl" for="cf-vocab">מונחים ושמות שחוזרים בקורס (לא חובה)</label><input id="cf-vocab" class="input" value=${vocab} onInput=${(e) => setVocab(e.target.value)} placeholder="גמישות, עקומת ביקוש, Elasticity" /><p class="hint">עוזר ל-Claude לתקן מונחים שהתמלול זיהה לא נכון.</p></div>
+    <div class="row" style="align-items:start;gap:18px">
+      <div><span class="lbl">צבע</span><div class="row" style="gap:6px">${COLORS.map((c) => html`<button type="button" aria-label=${"צבע " + c} aria-pressed=${color === c} onClick=${() => setColor(c)} style=${{ width: "30px", height: "30px", borderRadius: "99px", border: color === c ? "3px solid var(--ink)" : "2px solid var(--card)", background: c, cursor: "pointer" }}></button>`)}</div></div>
+      <div class="grow" style="min-width:180px"><label class="lbl" for="cf-exam">תאריך מבחן (לא חובה)</label><input id="cf-exam" type="date" class="input" value=${exam || ""} onInput=${(e) => setExam(e.target.value)} /></div>
+    </div>
+    <div class="row"><button class="btn primary" disabled=${busy || !name.trim()}>${course ? "שמירה" : "יצירת קורס"}</button><button type="button" class="btn ghost" onClick=${onClose}>ביטול</button></div>
+  </form><//>`;
+}
+
+/* ---------------- Course ---------------- */
+function CourseView({ id, store }) {
+  const c = store.courses.find((x) => x.id === id);
+  const [tab, setTab] = useState(() => { try { return sessionStorage.getItem("ctab-" + id) || "lessons"; } catch { return "lessons"; } });
+  const setT = (t) => { setTab(t); try { sessionStorage.setItem("ctab-" + id, t); } catch {} };
+  if (!store.loaded) return html`<${Busy} label="טוען…" />`;
+  if (!c) return html`<${Empty} icon="search" title="הקורס לא נמצא"><a class="btn primary" href="#">לבית</a><//>`;
+  const lessons = store.lessons.filter((l) => l.courseId === id).sort((a, b) => a.createdAt - b.createdAt);
+  const cards = store.cards.filter((x) => x.courseId === id);
+  const attempts = store.attempts.filter((x) => x.courseId === id);
+  const exams = store.exams.filter((x) => x.courseId === id);
+  const due = cards.filter(isDue).length;
+  const d = c.examDate ? daysUntil(c.examDate) : null;
+  const ctx = { c, lessons, cards, attempts, exams, store };
+  return html`
+    <header class="card course-card" style="padding:22px 24px"><span class="stripe" style=${{ background: c.color, width: "8px" }}></span>
+      <div class="row between"><div class="stack" style="gap:6px"><span class="small muted">קורס</span><h1>${c.name}</h1>
+        <div class="row" style="gap:6px">${d !== null && d >= 0 && html`<span class="chip gold">מבחן בעוד ${d} ימים</span>`}${due > 0 && html`<span class="chip">${due} כרטיסיות לחזרה</span>`}<span class="chip">${lessons.length} שיעורים</span></div></div>
+        <${AddLessonButton} course=${c} lessons=${lessons} /></div>
+    </header>
+    <${Tabs} value=${tab} onChange=${setT} tabs=${[["lessons", "שיעורים"], ["notebook", "מחברת"], ["cards", `כרטיסיות${due ? ` (${due})` : ""}`], ["exams", "מבחנים ותרגול"], ["past", "מבחנים קודמים"], ["chat", "שאל את הקורס"], ["plan", "תוכנית לימוד"], ["edit", "הגדרות"]]} />
+    ${tab === "lessons" && html`<${CourseLessons} ...${ctx} />`}
+    ${tab === "notebook" && html`<${Notebook} ...${ctx} />`}
+    ${tab === "cards" && html`<${CardsTab} cards=${cards} />`}
+    ${tab === "exams" && html`<${ExamsTab} ...${ctx} />`}
+    ${tab === "past" && html`<${PastExams} ...${ctx} />`}
+    ${tab === "chat" && html`<${Chat} key=${"c" + id} storageKey=${"chat-c-" + id} scope=${`הקורס "${c.name}"`} build=${() => courseChatContext(c, lessons, exams)} suggestions=${["מה הנושאים הכי חשובים למבחן?", "מה הקשר בין הנושאים בקורס?", "בחן אותי בשאלה פתוחה", "סכם לי את הקורס בעמוד אחד"]} disabled=${!lessons.some((l) => l.summary)} />`}
+    ${tab === "plan" && html`<${PlanTab} ...${ctx} />`}
+    ${tab === "edit" && html`<${CourseSettings} c=${c} lessons=${lessons} cards=${cards} exams=${exams} attempts=${attempts} />`}`;
+}
+
+async function courseChatContext(c, lessons, exams) {
+  let ctx = courseDigest(await withSections(lessons), 170000);
+  const style = examStyle(exams);
+  if (style) ctx += "\n\n---\nניתוח המבחנים הקודמים:\n" + style;
+  return ctx;
+}
+
+function AddLessonButton({ course, lessons }) {
+  const [open, setOpen] = useState(false);
+  return html`<button class="btn primary" onClick=${() => setOpen(true)}><${Icon} n="plus" />שיעור חדש</button>${open && html`<${AddLesson} course=${course} lessons=${lessons} onClose=${() => setOpen(false)} />`}`;
+}
+
+/** Add a lesson from Google Drive, a file, or pasted text. */
+function AddLesson({ course, lessons, onClose }) {
+  const [src, setSrc] = useState("drive");
+  const [title, setTitle] = useState(`שיעור ${lessons.length + 1}`);
+  const [text, setText] = useState("");
+  const [stage, setStage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [origin, setOrigin] = useState("");
+
+  async function create(autoSummarize) {
+    if (!text.trim()) return pushToast("אין עדיין טקסט לשיעור", "bad");
+    setBusy(true); setStage("שומר…");
+    try {
+      const id = newId();
+      const n = await saveText("transcripts", id, text.trim());
+      const lesson = { courseId: course.id, title: title.trim() || `שיעור ${lessons.length + 1}`, createdAt: Date.now(), source: origin || src, textParts: n, chars: text.length, minutes: speechMinutes(text.length), status: "new" };
+      await put("lessons", id, lesson);
+      onClose(); go("l-" + id);
+      if (autoSummarize) processLesson({ id, ...lesson }, course, pushToast);
+    } catch (e) { pushToast("השמירה נכשלה: " + (e.message || e.code), "bad"); setBusy(false); setStage(""); }
+  }
+
+  return html`<${Modal} title="שיעור חדש" onClose=${onClose}>
+    <div><label class="lbl" for="al-title">שם השיעור</label><input id="al-title" class="input" value=${title} onInput=${(e) => setTitle(e.target.value)} /><p class="hint">בסוף הסיכום Claude יציע שם לפי התוכן.</p></div>
+    <${Tabs} value=${src} onChange=${(v) => { setSrc(v); }} tabs=${[["drive", "מגוגל דרייב"], ["file", "קובץ מהמחשב"], ["paste", "הדבקה"]]} />
+    ${src === "drive" && html`<${DrivePicker} kind="transcript" onPick=${async (f) => { setStage("קורא את הקובץ מהדרייב…"); try { const r = await drive("read_file_content", { fileId: f.id }); const t = resultText(r); setText(t); setOrigin("drive"); if (/^שיעור \d+$/.test(title)) setTitle(f.title.replace(/\.[^.]+$/, "")); setStage(""); } catch (e) { setStage(""); pushToast(e.message, "bad"); } }} />`}
+    ${src === "file" && html`<${FileDrop} accept=".txt,.md,.vtt,.srt,.docx,.pdf,image/*" label="גרור לכאן קובץ תמלול, או לחץ לבחירה" hint="TXT, Word, PDF, תמונה, או כתוביות VTT / SRT (למשל מזום, טימס או יוטיוב)" onFile=${async (f) => { try { const t = await fileToText(f, setStage); setText(t); setOrigin("file"); if (/^שיעור \d+$/.test(title)) setTitle(f.name.replace(/\.[^.]+$/, "")); setStage(""); } catch (e) { setStage(""); pushToast(e.message, "bad"); } }} />`}
+    ${src === "paste" && html`<p class="small muted">הדבק את התמלול או את הסיכומים שלך מהשיעור.</p>`}
+    ${stage && html`<${Busy} label=${stage} />`}
+    <div><label class="lbl" for="al-text">טקסט השיעור ${text && html`<span class="muted small">(${words(text).toLocaleString("he-IL")} מילים, כ-${speechMinutes(text.length)} דק׳ דיבור)</span>`}</label>
+      <textarea id="al-text" class="textarea" style="min-height:180px" value=${text} onInput=${(e) => setText(e.target.value)} placeholder="כאן יופיע הטקסט. אפשר גם לערוך לפני השמירה."></textarea></div>
+    <div class="row"><button class="btn primary" disabled=${busy || !text.trim()} onClick=${() => create(true)}><${Icon} n="spark" />שמור וסכם</button><button class="btn ghost" disabled=${busy || !text.trim()} onClick=${() => create(false)}>רק לשמור</button></div>
+  <//>`;
+}
+
+function FileDrop({ accept, label, hint, onFile }) {
+  const [on, setOn] = useState(false); const ref = useRef();
+  return html`<div class=${"drop" + (on ? " on" : "")} onDragOver=${(e) => { e.preventDefault(); setOn(true); }} onDragLeave=${() => setOn(false)} onDrop=${(e) => { e.preventDefault(); setOn(false); const f = e.dataTransfer.files?.[0]; if (f) onFile(f); }}>
+    <div class="stack" style="justify-items:center;gap:8px"><${Icon} n="upload" s=${26} /><b>${label}</b><span class="small">${hint}</span>
+    <button type="button" class="btn ghost sm" onClick=${() => ref.current.click()}>בחירת קובץ</button></div>
+    <input ref=${ref} type="file" accept=${accept} hidden onChange=${(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) onFile(f); }} /></div>`;
+}
+
+function DrivePicker({ kind, onPick }) {
+  const [q, setQ] = useState(""); const [files, setFiles] = useState(null); const [busy, setBusy] = useState(false); const [err, setErr] = useState("");
+  const types = kind === "exam"
+    ? "(mimeType = 'application/vnd.google-apps.document' or mimeType = 'application/pdf' or mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType contains 'image/' or mimeType contains 'text/')"
+    : "(mimeType = 'application/vnd.google-apps.document' or mimeType = 'application/pdf' or mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType contains 'text/' or mimeType contains 'video/')";
+  async function search(e) {
+    e?.preventDefault(); setBusy(true); setErr("");
+    try {
+      const safe = q.trim().replace(/'/g, "\\'");
+      const r = await drive("search_files", { query: `${types} and trashed = false${safe ? ` and title contains '${safe}'` : ""}`, orderBy: "modifiedTime desc", pageSize: 15, excludeContentSnippets: true });
+      setFiles(r?.payload?.files || []);
+    } catch (e2) { setErr(e2.message); } finally { setBusy(false); }
+  }
+  useEffect(() => { search(); }, []);
+  return html`<div class="stack" style="gap:10px">
+    <form class="row" onSubmit=${search}><input class="input grow" placeholder="חיפוש לפי שם הקובץ" value=${q} onInput=${(e) => setQ(e.target.value)} aria-label="חיפוש בדרייב" /><button class="btn ghost">חיפוש</button></form>
+    ${busy && html`<${Busy} label="מחפש בדרייב…" />`}
+    ${err && html`<div class="notice bad small">${err}</div>`}
+    ${files && !busy && (files.length ? html`<div class="stack" style="gap:6px;max-height:240px;overflow-y:auto">${files.map((f) => html`<button type="button" class="opt" onClick=${() => onPick(f)}><${Icon} n="doc" /><span class="grow" style="min-width:0"><b class="truncate" style="display:block" dir=${dirOf(f.title)}>${f.title}</b><span class="tiny muted">${f.modifiedTime ? fmtDate(f.modifiedTime) : ""}</span></span></button>`)}</div>` : html`<p class="small muted">לא נמצאו קבצים.</p>`)}
+  </div>`;
+}
+
+function CourseLessons({ c, lessons, attempts }) {
+  const best = new Map(); for (const a of attempts) if (a.lessonId && a.kind === "lesson") best.set(a.lessonId, Math.max(best.get(a.lessonId) || 0, a.score));
+  const pending = lessons.filter((l) => l.status === "new" || l.status === "error");
+  const [batch, setBatch] = useState(false);
+  if (!lessons.length) return html`<${Empty} icon="book" title="עוד אין שיעורים בקורס" text="מוסיפים שיעור מתמלול בגוגל דרייב, מקובץ או מטקסט, ו-Claude מסכם אותו."><a class="small" href="#help">איך מתמללים שיעור בחינם?</a><//>`;
+  return html`<div class="stack">
+    ${pending.length > 1 && html`<div class="notice row between"><span>${pending.length} שיעורים ממתינים לסיכום.</span><button class="btn primary sm" disabled=${batch} onClick=${async () => { setBatch(true); for (const l of pending) await processLesson(l, c, pushToast); setBatch(false); }}>${batch ? "מסכם…" : "סכם את כולם"}</button></div>`}
+    ${lessons.map((l, i) => html`<a class="card tight list-item" href=${"#l-" + l.id}><span class="num">${i + 1}</span><span class="grow" style="min-width:0"><b class="truncate" style="display:block">${l.title}</b><span class="tiny muted">${fmtDate(l.createdAt)}${l.minutes ? ` · כ-${l.minutes} דק׳` : ""}${best.has(l.id) ? ` · שיא במבחן ${best.get(l.id)}%` : ""}${l.status === "processing" && l.progress ? ` · ${l.progress}` : ""}</span></span><${StatusChip} s=${l.status} /></a>`)}
+  </div>`;
+}
+
+/* ---------------- Lesson ---------------- */
+function LessonView({ id, store }) {
+  const l = store.lessons.find((x) => x.id === id);
+  const [tab, setTab] = useState("summary");
+  const [edit, setEdit] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [word, setWord] = useState(false);
+  if (!store.loaded) return html`<${Busy} label="טוען…" />`;
+  if (!l) return html`<${Empty} icon="search" title="השיעור לא נמצא"><a class="btn primary" href="#">לבית</a><//>`;
+  const c = store.courses.find((x) => x.id === l.courseId) || { name: "", id: l.courseId };
+  const cards = store.cards.filter((x) => x.lessonId === id);
+  const isRunning = l.status === "processing";
+  return html`
+    <nav class="small muted row" style="gap:6px"><a href="#">בית</a><span>›</span><a href=${"#c-" + c.id}>${c.name}</a></nav>
+    <header class="card stack" style="gap:10px">
+      <div class="row between" style="align-items:start">
+        ${edit ? html`<input class="input" style="font-family:var(--display);font-size:1.5rem;font-weight:700" value=${l.title} autofocus onBlur=${async (e) => { const t = e.target.value.trim(); setEdit(false); if (t && t !== l.title) await patch("lessons", id, { title: t, titleEdited: true }); }} onKeyDown=${(e) => e.key === "Enter" && e.target.blur()} aria-label="שם השיעור" />`
+          : html`<h1 style="cursor:text" title="לחץ לשינוי השם" onClick=${() => setEdit(true)}>${l.title}</h1>`}
+        <div class="row" style="gap:6px">
+          ${l.summary && html`<button class="btn ghost sm" onClick=${() => setWord(true)}><${Icon} n="doc" />Word</button>`}
+          <button class="btn quiet sm" onClick=${() => setConfirm(true)} aria-label="מחיקת השיעור"><${Icon} n="trash" /></button>
+        </div>
+      </div>
+      <div class="row small muted" style="gap:8px"><${StatusChip} s=${l.status} /><span>${fmtDate(l.createdAt)}</span>${l.minutes && html`<span>· כ-${l.minutes} דק׳ דיבור</span>`}<span>· ${({ drive: "מגוגל דרייב", file: "מקובץ", paste: "מטקסט" })[l.source] || ""}</span></div>
+      ${isRunning && html`<div class="stack" style="gap:6px"><${Busy} label=${l.progress || "מסכם…"} /><${Bar} indet /><p class="tiny muted">אפשר לעבור לדפים אחרים באתר. הסיכום ממשיך כל עוד הדף פתוח.</p></div>`}
+      ${l.status === "error" && html`<div class="notice bad row between"><span>${l.error}</span><button class="btn primary sm" onClick=${() => processLesson(l, c, pushToast)}>נסה שוב</button></div>`}
+      ${(l.status === "new" || !l.status) && html`<div class="notice row between"><span>השיעור נשמר. לחץ כדי ש-Claude יסכם אותו ויבנה מבחן, כרטיסיות ושאלות פתוחות.</span><button class="btn primary" onClick=${() => processLesson(l, c, pushToast)}><${Icon} n="spark" />סכם עכשיו</button></div>`}
+    </header>
+    <${Tabs} value=${tab} onChange=${setTab} tabs=${[["summary", "סיכום"], ["quiz", `מבחן${l.quiz?.length ? ` (${l.quiz.length})` : ""}`], ["open", "שאלות פתוחות"], ["cards", `כרטיסיות${cards.length ? ` (${cards.length})` : ""}`], ["text", "תמלול"], ["chat", "שאל את השיעור"]]} />
+    ${tab === "summary" && (l.summary ? html`<${SummaryView} l=${l} c=${c} /> ` : html`<${Empty} icon="spark" title=${isRunning ? "Claude מסכם את השיעור…" : "עוד אין סיכום"} text=${isRunning ? l.progress : "לחץ ״סכם עכשיו״ למעלה."} />`)}
+    ${tab === "quiz" && html`<${LessonQuiz} l=${l} c=${c} />`}
+    ${tab === "open" && html`<${OpenPractice} key=${"o" + id} questions=${l.openQs || []} courseId=${c.id} lessonId=${id} empty="שאלות פתוחות נוצרות יחד עם הסיכום." />`}
+    ${tab === "cards" && (cards.length ? html`<${CardsTab} cards=${cards} />` : html`<${Empty} icon="cards" title="אין כרטיסיות לשיעור הזה" text="הכרטיסיות נוצרות יחד עם הסיכום." />`)}
+    ${tab === "text" && html`<${TranscriptTab} l=${l} />`}
+    ${tab === "chat" && html`<${Chat} key=${"l" + id} storageKey=${"chat-l-" + id} scope=${`השיעור "${l.title}"`} build=${async () => { const t = await loadText("transcripts", id, l.textParts); const [lf] = await withSections([l]); return fitBytes((l.summary ? lessonDigest(lf, 0) + "\n\n---\n\n" : "") + "<transcript>\n" + t + "\n</transcript>", 175000); }} suggestions=${["תסביר לי שוב את הנושא המרכזי בפשטות", "מה המרצה אמר שיהיה במבחן?", "תן לי 3 שאלות לתרגול", "מה ההבדל בין המושגים העיקריים?"]} />`}
+    ${confirm && html`<${Confirm} title="למחוק את השיעור?" text="יימחקו התמלול, הסיכום, המבחן והכרטיסיות של השיעור. אי אפשר לשחזר." action="מחיקה" onClose=${() => setConfirm(false)} onYes=${async () => { await deleteText("transcripts", id); for (const x of cards) await del("cards", x.id); await del("lessons", id); go("c-" + c.id); }} />`}
+    ${word && html`<${WordDialog} title=${l.title} settings=${store.settings} onClose=${() => setWord(false)} build=${async () => { const [lf] = await withSections([l]); return buildDocx({ headerText: `${c.name} · ${l.title}`, sections: [lessonSection(lf, 0, c.name), practiceSection([lf])] }); }} />`}`;
+}
+
+function SummaryView({ l, c }) {
+  const full = useFull(l); const [editing, setEditing] = useState(-1); const [draft, setDraft] = useState("");
+  if (!full) return html`<${Busy} label="טוען את הסיכום…" />`;
+  const s = full.summary;
+  async function saveSection(i) {
+    const sections = s.sections.map((x, k) => (k === i ? { ...x, content: draft } : x));
+    if (l.summary.sectionChunks) { const n = await saveRaw("sections", l.id, JSON.stringify(sections)); sectionCache.clear(); await patch("lessons", l.id, { summary: { ...l.summary, sectionChunks: n }, processedAt: Date.now() }); }
+    else await patch("lessons", l.id, { summary: { ...l.summary, sections } });
+    setEditing(-1); pushToast("נשמר", "good");
+  }
+  return html`<article class="stack">
+    ${s.overview && html`<div class="card" style="background:var(--plum-soft);border-color:transparent"><h3 style="margin-bottom:6px">בקצרה</h3><p>${s.overview}</p></div>`}
+    ${s.sections.length > 2 && html`<nav class="card"><h3 style="margin-bottom:8px">נושאי השיעור</h3><ol style="margin:0;padding-inline-start:1.3em;columns:2 260px">${s.sections.map((x, i) => html`<li><a href=${"#l-" + l.id} onClick=${(e) => { e.preventDefault(); document.getElementById("sec-" + i)?.scrollIntoView({ behavior: "smooth" }); }}>${x.heading}</a></li>`)}</ol></nav>`}
+    ${s.sections.map((x, i) => html`<section class="card stack" id=${"sec-" + i} style="gap:10px;scroll-margin-top:80px">
+      <div class="row between"><h2>${x.heading}</h2>${editing !== i && html`<button class="btn quiet sm" onClick=${() => { setEditing(i); setDraft(x.content); }} aria-label="עריכת הנושא"><${Icon} n="pen" />עריכה</button>`}</div>
+      ${editing === i ? html`<textarea class="textarea" style="min-height:260px" value=${draft} onInput=${(e) => setDraft(e.target.value)} aria-label="עריכת התוכן"></textarea><div class="row"><button class="btn primary sm" onClick=${() => saveSection(i)}>שמירה</button><button class="btn ghost sm" onClick=${() => setEditing(-1)}>ביטול</button><span class="tiny muted">Markdown: **מודגש**, - רשימה, $x^2$ לנוסחה</span></div>` : html`<${Md} text=${x.content} />`}
+    </section>`)}
+    ${s.takeaways?.length > 0 && html`<section class="card stack" style="gap:8px;background:var(--gold-soft);border-color:transparent"><h2>הכי חשוב לזכור</h2><ul style="margin:0;padding-inline-start:1.2em">${s.takeaways.map((t) => html`<li>${t}</li>`)}</ul></section>`}
+    ${s.keyTerms?.length > 0 && html`<section class="card stack" style="gap:10px"><h2>מושגי מפתח</h2><div class="grid2">${s.keyTerms.map((k) => html`<div class="card tight" style="padding:10px 12px"><b dir=${dirOf(k.term)}>${k.term}</b><p class="small muted">${k.definition}</p></div>`)}</div></section>`}
+    ${s.openQuestions?.length > 0 && html`<section class="card stack" style="gap:8px"><h2>משימות ונקודות פתוחות</h2><ul style="margin:0;padding-inline-start:1.2em">${s.openQuestions.map((t) => html`<li>${t}</li>`)}</ul></section>`}
+    <div class="row" style="justify-content:center"><button class="btn quiet sm" onClick=${async () => { await patch("lessons", l.id, { partResults: [], status: "new" }); processLesson({ ...l, partResults: [] }, c, pushToast); }}><${Icon} n="spark" />סיכום מחדש</button></div>
+  </article>`;
+}
+
+function TranscriptTab({ l }) {
+  const [text, setText] = useState(null); const [q, setQ] = useState(""); const [edit, setEdit] = useState(false); const [draft, setDraft] = useState("");
+  useEffect(() => { loadText("transcripts", l.id, l.textParts).then(setText).catch(() => setText("")); }, [l.id, l.textParts]);
+  if (text === null) return html`<${Busy} label="טוען תמלול…" />`;
+  const paras = text.split(/\n{2,}|\n/).filter((p) => p.trim());
+  const shown = q.trim() ? paras.filter((p) => p.includes(q.trim())) : paras;
+  async function save() {
+    const n = await saveText("transcripts", l.id, draft.trim());
+    await patch("lessons", l.id, { textParts: n, chars: draft.length, minutes: speechMinutes(draft.length) });
+    setText(draft.trim()); setEdit(false); pushToast("התמלול נשמר. אפשר ללחוץ ״סיכום מחדש״ כדי לעדכן את הסיכום.", "good");
+  }
+  if (edit) return html`<div class="card stack"><textarea class="textarea" style="min-height:420px" value=${draft} onInput=${(e) => setDraft(e.target.value)} aria-label="עריכת התמלול"></textarea><div class="row"><button class="btn primary" onClick=${save}>שמירה</button><button class="btn ghost" onClick=${() => setEdit(false)}>ביטול</button></div></div>`;
+  return html`<div class="stack">
+    <div class="row"><input class="input grow" placeholder="חיפוש בתמלול" value=${q} onInput=${(e) => setQ(e.target.value)} aria-label="חיפוש בתמלול" /><button class="btn ghost" onClick=${() => { setDraft(text); setEdit(true); }}><${Icon} n="pen" />עריכה</button></div>
+    <div class="card stack" style="gap:10px">${shown.length ? shown.map((p) => html`<p dir=${dirOf(p)}>${highlight(p, q.trim())}</p>`) : html`<p class="muted">לא נמצאו תוצאות.</p>`}</div>
+  </div>`;
+}
+function highlight(t, q) { if (!q) return t; const parts = t.split(q); return parts.flatMap((p, i) => (i ? [html`<mark style="background:var(--gold-soft);color:inherit">${q}</mark>`, p] : [p])); }
+
+/* ---------------- Quiz ---------------- */
+function LessonQuiz({ l, c }) {
+  const [run, setRun] = useState(null); const qs = cleanQuestions(l.quiz);
+  if (!qs.length) return html`<${Empty} icon="target" title="המבחן ייווצר יחד עם הסיכום" />`;
+  if (run) return html`<${QuizRunner} key=${run.k} questions=${run.qs} mode="practice" onFinish=${(ans, dur) => put("attempts", newId(), { courseId: c.id, lessonId: l.id, kind: run.kind, score: scoreOf(run.qs, ans), questions: run.qs, answers: ans, duration: dur, createdAt: Date.now() }).catch(() => {})} onRestart=${() => setRun({ qs: qs.map(shuffleQ), kind: "lesson", k: Date.now() })} onMistakes=${(w) => setRun({ qs: w.map(shuffleQ), kind: "mistakes", k: Date.now() })} />`;
+  return html`<div class="card empty"><div class="glyph"><${Icon} n="target" s=${26} /></div><h2>מבחן הבנה · ${qs.length} שאלות</h2><p class="muted">שאלה אחת בכל פעם, עם משוב והסבר מיד אחרי כל תשובה. מקלדת: 1-4 לבחירה, Enter להמשך.</p><button class="btn primary lg" onClick=${() => setRun({ qs: qs.map(shuffleQ), kind: "lesson", k: Date.now() })}>התחל מבחן</button></div>`;
+}
+
+function QuizRunner({ questions, mode, timeLimit, onFinish, onRestart, onMistakes }) {
+  const [i, setI] = useState(0); const [ans, setAns] = useState(() => questions.map(() => -1)); const [shown, setShown] = useState(false); const [fin, setFin] = useState(false);
+  const start = useRef(Date.now()); const [now, setNow] = useState(Date.now());
+  const q = questions[i]; const chosen = ans[i];
+  const finish = (a = ans) => { if (fin) return; setFin(true); onFinish?.(a, Math.round((Date.now() - start.current) / 1000)); scrollTo({ top: 0, behavior: "smooth" }); };
+  useEffect(() => { if (!timeLimit || fin) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, [timeLimit, fin]);
+  const left = timeLimit ? timeLimit - Math.floor((now - start.current) / 1000) : null;
+  useEffect(() => { if (left !== null && left <= 0 && !fin) finish(); }, [left]);
+  const choose = (k) => { if (fin || (mode === "practice" && shown)) return; setAns((a) => a.map((v, j) => (j === i ? k : v))); if (mode === "practice") setShown(true); };
+  const next = () => { setShown(false); if (i < questions.length - 1) setI(i + 1); else finish(); };
+  useEffect(() => { const h = (e) => { if (fin || /INPUT|TEXTAREA/.test(e.target.tagName)) return; const n = +e.key; if (n >= 1 && n <= (q?.options.length || 0)) choose(n - 1); if (e.key === "Enter" && chosen >= 0) next(); }; addEventListener("keydown", h); return () => removeEventListener("keydown", h); });
+  if (fin) {
+    const sc = scoreOf(questions, ans); const wrong = questions.filter((qq, k) => ans[k] !== qq.correctIndex); const stats = topicStats([{ questions, answers: ans }]);
+    return html`<div class="stack">
+      <div class="card empty"><${Ring} pct=${sc} /><b>${questions.length - wrong.length} מתוך ${questions.length} נכונות</b><p class="muted">${sc >= 90 ? "מלכותי. שולט בחומר." : sc >= 75 ? "יפה מאוד. עוד קצת ליטוש." : sc >= 55 ? "בכיוון הנכון. כדאי לחזור על הנושאים החלשים." : "שווה לעבור שוב על הסיכום ולנסות שוב."}</p>
+        <div class="row" style="justify-content:center">${wrong.length > 0 && onMistakes && html`<button class="btn gold" onClick=${() => onMistakes(wrong)}>תרגול רק הטעויות (${wrong.length})</button>`}${onRestart && html`<button class="btn ghost" onClick=${onRestart}>נסה שוב</button>`}</div></div>
+      ${stats.length > 1 && html`<div class="card stack" style="gap:10px"><h3>לפי נושאים</h3>${stats.map((s) => html`<div class="stack" style="gap:4px"><div class="row between small"><span>${s.topic}</span><b style=${{ color: s.pct < 60 ? "var(--bad)" : s.pct < 80 ? "var(--warn)" : "var(--good)" }}>${s.c}/${s.n}</b></div><${Bar} v=${s.pct / 100} /></div>`)}</div>`}
+      <h3>סקירת התשובות</h3>${questions.map((qq, k) => html`<${QCard} q=${qq} n=${k + 1} chosen=${ans[k]} shown />`)}
+    </div>`;
+  }
+  return html`<div class="stack">
+    <div class="row"><div class="grow"><${Bar} v=${(i + (chosen >= 0 ? 1 : 0)) / questions.length} /></div><span class="small muted ltr">${i + 1}/${questions.length}</span>${left !== null && html`<span class=${"chip ltr " + (left < 60 ? "bad" : "")}>${Math.floor(Math.max(0, left) / 60)}:${String(Math.max(0, left) % 60).padStart(2, "0")}</span>`}</div>
+    <${QCard} q=${q} n=${i + 1} chosen=${chosen} shown=${mode === "practice" && shown} onChoose=${choose} />
+    <div class="row between"><button class="btn quiet" disabled=${i === 0} onClick=${() => { setShown(mode === "practice" && ans[i - 1] >= 0); setI(i - 1); }}>הקודמת</button>
+      ${mode === "exam" && i === questions.length - 1 ? html`<button class="btn primary" onClick=${() => finish()}>הגשת המבחן</button>` : html`<button class="btn primary" disabled=${chosen < 0} onClick=${next}>${i === questions.length - 1 ? "לתוצאות" : "הבאה"}</button>`}</div>
+    ${mode === "exam" && html`<div class="row" style="justify-content:center;gap:6px">${questions.map((_, k) => html`<button class="btn sm" style=${{ minHeight: "32px", width: "34px", padding: 0, background: k === i ? "var(--plum)" : ans[k] >= 0 ? "var(--plum-soft)" : "var(--card)", color: k === i ? "var(--card)" : "inherit", border: "1px solid var(--line)" }} onClick=${() => setI(k)} aria-label=${"שאלה " + (k + 1)}>${k + 1}</button>`)}</div>`}
+  </div>`;
+}
+function QCard({ q, n, chosen, shown, onChoose }) {
+  return html`<div class="card stack" style="gap:12px">
+    <div class="row between" style="align-items:start"><h3 style="font-family:var(--body);font-weight:600;line-height:1.6"><span class="muted">${n}. </span><span dir=${dirOf(q.question)}>${q.question}</span></h3><span class="chip">${q.topic}</span></div>
+    <div class="stack" style="gap:8px">${q.options.map((o, k) => { const ok = k === q.correctIndex, me = chosen === k; const cls = shown ? (ok ? " ok" : me ? " no" : "") : me ? " sel" : ""; return html`<button class=${"opt" + cls} disabled=${!onChoose || shown} onClick=${() => onChoose?.(k)}><span class="letter">${LETTERS[k]}</span><span class="grow" dir=${dirOf(o)} style="text-align:start">${o}</span>${shown && ok && html`<${Icon} n="check" />`}</button>`; })}</div>
+    ${shown && html`<div class="explain"><b>הסבר: </b>${q.explanation}${q.lessonTitle && html`<span class="muted small" style="display:block">מתוך: ${q.lessonTitle}</span>`}</div>`}
+  </div>`;
+}
+function Ring({ pct }) { const r = 50, C = 2 * Math.PI * r; const col = pct >= 80 ? "var(--good)" : pct >= 60 ? "var(--gold)" : "var(--bad)"; return html`<div style="position:relative;width:130px;height:130px"><svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(-90deg)"><circle cx="60" cy="60" r=${r} stroke="var(--line)" stroke-width="10" fill="none" /><circle cx="60" cy="60" r=${r} stroke=${col} stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray=${C} stroke-dashoffset=${C * (1 - pct / 100)} /></svg><b style="position:absolute;inset:0;display:grid;place-items:center;font-size:2rem;font-family:var(--display)">${pct}%</b></div>`; }
+
+/* ---------------- Open questions with grading ---------------- */
+function OpenPractice({ questions, courseId, lessonId, empty }) {
+  const qs = cleanOpen(questions); const [i, setI] = useState(0); const [answer, setAnswer] = useState(""); const [grade, setGrade] = useState(null); const [busy, setBusy] = useState(false); const [showModel, setShowModel] = useState(false);
+  if (!qs.length) return html`<${Empty} icon="pen" title="אין עדיין שאלות פתוחות" text=${empty} />`;
+  const q = qs[i];
+  async function check() {
+    if (!answer.trim()) return; setBusy(true);
+    try {
+      const g = await askJSON(P_.grade(q, answer));
+      const res = { score: clamp(Math.round(+g.score || 0), 0, 100), verdict: String(g.verdict || ""), strengths: (g.strengths || []).map(String), missing: (g.missing || []).map(String), feedback: String(g.feedback || "") };
+      setGrade(res);
+      put("attempts", newId(), { courseId, lessonId: lessonId || null, kind: "open", score: res.score, questions: [{ question: q.question, topic: q.topic || "שאלה פתוחה", options: [], correctIndex: 0 }], answers: [0], createdAt: Date.now() }).catch(() => {});
+    } catch (e) { pushToast(e.message, "bad"); } finally { setBusy(false); }
+  }
+  const nextQ = (d) => { setI((i + d + qs.length) % qs.length); setAnswer(""); setGrade(null); setShowModel(false); };
+  return html`<div class="stack">
+    <div class="row between"><span class="small muted">שאלה ${i + 1} מתוך ${qs.length}</span><div class="row" style="gap:6px"><button class="btn quiet sm" onClick=${() => nextQ(-1)}>הקודמת</button><button class="btn quiet sm" onClick=${() => nextQ(1)}>הבאה</button></div></div>
+    <div class="card stack"><h3 style="font-family:var(--body);font-weight:600;line-height:1.6" dir=${dirOf(q.question)}>${q.question}</h3>
+      <textarea id="open-answer" class="textarea" style="min-height:180px" placeholder="כתוב את התשובה שלך כמו במבחן…" value=${answer} onInput=${(e) => setAnswer(e.target.value)} disabled=${busy}></textarea>
+      <div class="row"><button class="btn primary" disabled=${busy || !answer.trim()} onClick=${check}>${busy ? html`<${Busy} label="בודק…" />` : "בדיקת התשובה"}</button><button class="btn ghost" onClick=${() => setShowModel(!showModel)}>${showModel ? "הסתר" : "הצג"} תשובה לדוגמה</button></div>
+    </div>
+    ${grade && html`<div class="card stack"><div class="row"><${Ring} pct=${grade.score} /><div class="grow stack" style="gap:6px"><b>${grade.verdict}</b>${grade.strengths.length > 0 && html`<div><span class="chip good">מה היה טוב</span><ul style="margin:4px 0 0;padding-inline-start:1.2em">${grade.strengths.map((s) => html`<li>${s}</li>`)}</ul></div>`}${grade.missing.length > 0 && html`<div><span class="chip bad">מה חסר</span><ul style="margin:4px 0 0;padding-inline-start:1.2em">${grade.missing.map((s) => html`<li>${s}</li>`)}</ul></div>`}</div></div>${grade.feedback && html`<${Md} text=${grade.feedback} />`}</div>`}
+    ${showModel && html`<div class="card stack" style="background:var(--gold-soft);border-color:transparent"><h3>תשובה לדוגמה</h3><${Md} text=${q.modelAnswer} />${q.rubric?.length > 0 && html`<div><b class="small">מחוון:</b><ul style="margin:4px 0 0;padding-inline-start:1.2em">${q.rubric.map((r) => html`<li class="small">${r}</li>`)}</ul></div>`}</div>`}
+  </div>`;
+}
+
+/* ---------------- Flashcards ---------------- */
+function CardsTab({ cards }) {
+  const [mode, setMode] = useState(null); const [k, setK] = useState(0);
+  const due = cards.filter(isDue);
+  if (mode) return html`<div class="stack"><button class="btn quiet sm" style="justify-self:start" onClick=${() => setMode(null)}>חזרה</button><${Deck} key=${k} cards=${mode === "due" ? due : cards} /></div>`;
+  const boxes = [1, 2, 3, 4, 5].map((b) => cards.filter((c) => (c.box || 1) === b).length);
+  return html`<div class="stack">
+    <div class="card empty"><div class="glyph"><${Icon} n="cards" s=${26} /></div><h2>${due.length} כרטיסיות מחכות לחזרה</h2><p class="muted" style="max-width:520px">חזרה מרווחת: כרטיסייה שידעת חוזרת אחרי יום, 3 ימים, שבוע, שבועיים וחודש, כך שהחומר נשאר בזיכרון לטווח ארוך.</p>
+      <div class="row" style="justify-content:center"><button class="btn primary lg" disabled=${!due.length} onClick=${() => { setK(Date.now()); setMode("due"); }}>חזרה יומית</button><button class="btn ghost" disabled=${!cards.length} onClick=${() => { setK(Date.now()); setMode("all"); }}>כל הכרטיסיות (${cards.length})</button></div></div>
+    ${cards.length > 0 && html`<div class="card"><h3 style="margin-bottom:10px">רמת שליטה</h3><div class="grid3" style="grid-template-columns:repeat(5,1fr);gap:6px">${boxes.map((n, i) => html`<div style=${{ textAlign: "center", padding: "10px 4px", borderRadius: "10px", background: `color-mix(in srgb, var(--plum) ${6 + i * 11}%, var(--card))` }}><b style="font-size:1.3rem">${n}</b><div class="tiny muted">${["חדש", "מתחיל", "בינוני", "טוב", "שולט"][i]}</div></div>`)}</div></div>`}
+  </div>`;
+}
+function Deck({ cards }) {
+  const [queue, setQueue] = useState(() => [...cards].sort((a, b) => (a.due || 0) - (b.due || 0))); const [flip, setFlip] = useState(false); const [st, setSt] = useState({ knew: 0, again: 0 }); const total = useRef(queue.length);
+  const card = queue[0];
+  async function answer(knew) {
+    if (!card) return; const nx = reviewCard(card, knew); setFlip(false);
+    setSt((s) => (knew ? { ...s, knew: s.knew + 1 } : { ...s, again: s.again + 1 }));
+    setQueue((q) => (knew ? q.slice(1) : [...q.slice(1), { ...card, ...nx }]));
+    patch("cards", card.id, { ...nx, reviews: (card.reviews || 0) + 1 }).catch(() => pushToast("שמירת ההתקדמות נכשלה", "bad"));
+  }
+  useEffect(() => { const h = (e) => { if (!card || /INPUT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === " ") { e.preventDefault(); setFlip((f) => !f); } else if (flip && e.key === "ArrowLeft") answer(true); else if (flip && e.key === "ArrowRight") answer(false); }; addEventListener("keydown", h); return () => removeEventListener("keydown", h); });
+  if (!total.current) return html`<${Empty} icon="cards" title="אין כרטיסיות לחזרה כרגע" />`;
+  if (!card) return html`<${Empty} icon="check" title="סיימת את החזרה" text=${`ידעת ${st.knew} כרטיסיות${st.again ? `, ו-${st.again} חזרו לסבב נוסף` : ""}. הן יחזרו בדיוק כשצריך לרענן אותן.`} />`;
+  return html`<div class="stack" style="max-width:640px;width:100%;margin:0 auto">
+    <div class="row"><div class="grow"><${Bar} v=${st.knew / total.current} /></div><span class="small muted ltr">${st.knew}/${total.current}</span></div>
+    <button class="flip" onClick=${() => setFlip(!flip)} aria-label="הפוך כרטיסייה"><div class=${"flip-in" + (flip ? " on" : "")}>
+      <div class="face card"><div class="stack" style="gap:10px"><span class="tiny muted">שאלה · קופסה ${card.box || 1}/5</span><b style="font-family:var(--display);font-size:1.45rem" dir=${dirOf(card.front)}>${card.front}</b><span class="tiny muted">לחץ או רווח כדי להפוך</span></div></div>
+      <div class="face back card"><div class="stack" style="gap:8px;width:100%"><span class="tiny muted">תשובה</span><${Md} text=${card.back} cls="center" /></div></div>
+    </div></button>
+    <div class="grid2" style="grid-template-columns:1fr 1fr;opacity:${flip ? 1 : 0.4};pointer-events:${flip ? "auto" : "none"}"><button class="btn ghost lg" onClick=${() => answer(false)}>עוד לא (→)</button><button class="btn primary lg" onClick=${() => answer(true)}>ידעתי (←)</button></div>
+  </div>`;
+}
+function ReviewView({ store }) {
+  const [course, setCourse] = useState("all"); const [k, setK] = useState(0);
+  if (!store.loaded) return html`<${Busy} label="טוען…" />`;
+  const due = store.cards.filter(isDue).filter((c) => course === "all" || c.courseId === course);
+  const by = store.courses.map((c) => ({ c, n: store.cards.filter((x) => isDue(x) && x.courseId === c.id).length })).filter((x) => x.n);
+  return html`<section class="stack"><h1>חזרה יומית</h1><p class="muted">כמה דקות ביום של חזרה מרווחת שומרות את כל החומר טרי עד המבחן.</p></section>
+    ${by.length > 1 && !k && html`<div class="row"><button class=${"btn sm " + (course === "all" ? "primary" : "ghost")} onClick=${() => setCourse("all")}>הכל</button>${by.map(({ c, n }) => html`<button class=${"btn sm " + (course === c.id ? "primary" : "ghost")} onClick=${() => setCourse(c.id)}>${c.name} (${n})</button>`)}</div>`}
+    ${k ? html`<${Deck} key=${k} cards=${due} />` : html`<div class="card empty"><b style="font-size:3rem;font-family:var(--display)">${due.length}</b><p class="muted">כרטיסיות מחכות לך היום</p><button class="btn primary lg" disabled=${!due.length} onClick=${() => setK(Date.now())}>${due.length ? "בוא נתחיל" : "אין מה לחזור היום"}</button></div>`}`;
+}
+
+/* ---------------- Notebook ---------------- */
+function Notebook({ c, lessons, store }) {
+  const readyRaw = lessons.filter((l) => l.summary); const ready = readyRaw;
+  const [chapters, setChapters] = useState(null); const [prog, setProg] = useState(null); const [view, setView] = useState(c.notebook ? "merged" : "lessons"); const [word, setWord] = useState(null);
+  const nb = c.notebook;
+  useEffect(() => {
+    if (!nb) { setChapters([]); return; }
+    (async () => { const out = []; for (let i = 0; i < (nb.chapterCount || 0); i++) { const s = await col("chapters").doc(`${c.id}_${i}`).get(); if (s.exists) out.push(s.data()); } setChapters(out); })().catch(() => setChapters([]));
+  }, [nb?.updatedAt]);
+  const missing = ready.filter((l) => !(nb?.lessonIds || []).includes(l.id)).length;
+
+  async function build() {
+    setProg({ t: "בונה את מבנה המחברת…", v: 0.05 });
+    try {
+      const ready = await withSections(readyRaw);
+      const digestShort = ready.map((l, i) => lessonDigest(l, i + 1, false)).join("\n\n");
+      const o = await askJSON(P_.outline(c, fitBytes(digestShort, 150000)));
+      const chs = (o.chapters || []).filter((x) => x?.title);
+      if (!chs.length) throw new Error("לא התקבל מבנה למחברת. נסה שוב.");
+      const out = new Array(chs.length); let done = 0; const queue = chs.map((ch, i) => ({ ch, i }));
+      const worker = async () => { for (let it = queue.shift(); it; it = queue.shift()) {
+        const nums = (it.ch.lessonNumbers || []).filter((n) => n >= 1 && n <= ready.length);
+        const src = (nums.length ? nums : ready.map((_, k) => k + 1)).map((n) => lessonDigest(ready[n - 1], n)).join("\n\n---\n\n");
+        const r = await askJSON(P_.chapter(c, it.ch, fitBytes(src, 190000)));
+        out[it.i] = { courseId: c.id, n: it.i, title: it.ch.title, lessonNumbers: nums, content: String(r.content || "") };
+        done++; setProg({ t: `כותב פרקים… (${done}/${chs.length})`, v: 0.1 + 0.75 * (done / chs.length) });
+      } };
+      await Promise.all([worker(), worker()]);
+      setProg({ t: "מכין דף הכנה למבחן…", v: 0.9 });
+      const prep = await askJSON(P_.examPrep(c, fitBytes([`פרקים: ${chs.map((x) => x.title).join(" · ")}`, ...ready.map((l, i) => `שיעור ${i + 1}: ${l.title}\n${l.summary.overview}\nעיקרים: ${(l.summary.takeaways || []).join(" | ")}`), examStyle(store.exams.filter((e) => e.courseId === c.id))].join("\n\n"), 180000)));
+      for (const ch of out) await put("chapters", `${c.id}_${ch.n}`, ch);
+      for (let i = out.length; i < (nb?.chapterCount || 0); i++) await del("chapters", `${c.id}_${i}`);
+      await patch("courses", c.id, { notebook: { title: String(o.title || c.name), introduction: String(o.introduction || ""), examPrep: String(prep.examPrep || ""), glossary: mergeTerms(ready.flatMap((l) => l.summary.keyTerms || [])), chapterCount: out.length, lessonIds: ready.map((l) => l.id), updatedAt: Date.now() } });
+      setView("merged"); pushToast("המחברת מוכנה", "good");
+    } catch (e) { pushToast("בניית המחברת נכשלה: " + e.message, "bad"); } finally { setProg(null); }
+  }
+  const wordBuild = (full) => async () => { const ready = await withSections(readyRaw); return buildDocx({ headerText: `${c.name} · מחברת קורס`, titlePage: { kicker: "מחברת קורס", title: nb?.title || c.name, lines: [`${ready.length} שיעורים`, `עודכן ${fmtDate(Date.now())}`] }, sections: [
+    (a) => [a.h("תוכן העניינים", 0), ...[...(nb ? (chapters || []).map((ch, i) => `פרק ${i + 1}: ${ch.title}`).concat(["מילון מושגים", "הכנה למבחן"]) : []), ...(full || !nb ? ready.map((l, i) => `שיעור ${i + 1}: ${l.title}`) : []), ...(full ? ["נספח: שאלות תרגול ומפתח תשובות"] : [])].map((t) => a.para([a.run(t)], { spacing: { after: 60 }, indent: { start: 240 } })), a.pageBreak()],
+    ...(nb ? [(a) => [...a.blocks(nb.introduction, 1), ...(chapters || []).flatMap((ch, i) => [a.pageBreak(), a.h(`פרק ${i + 1}: ${ch.title}`, 0), ...(ch.lessonNumbers?.length ? [a.para([a.run(`מתוך שיעורים ${ch.lessonNumbers.join(", ")}`, { color: a.MUTED, size: 20 })])] : []), ...a.blocks(ch.content, 1)]),
+      ...(nb.glossary?.length ? [a.pageBreak(), a.h("מילון מושגים", 0), a.termsTable(nb.glossary)] : []), a.pageBreak(), a.h("הכנה למבחן", 0), ...a.blocks(nb.examPrep, 1)]] : []),
+    ...((full || !nb) ? ready.map((l, i) => (a) => [a.pageBreak(), ...lessonSection(l, i + 1)(a)]) : []),
+    ...(full ? [practiceSection(ready)] : []),
+  ] }); };
+
+  if (!ready.length) return html`<${Empty} icon="book" title="המחברת תיבנה מהשיעורים המסוכמים" text="אחרי שיעור מסוכם אחד לפחות אפשר לבנות מחברת קורס." />`;
+  return html`<div class="stack">
+    <div class="card row between"><div class="stack" style="gap:2px"><b>${nb?.title || "מחברת הקורס"}</b><span class="small muted">${ready.length} שיעורים מסוכמים${nb ? ` · עודכנה ${fmtDate(nb.updatedAt)}` : ""}</span>${nb && missing > 0 && html`<span class="small" style="color:var(--warn)">נוספו ${missing} שיעורים מאז העדכון האחרון.</span>`}</div>
+      <div class="row"><button class="btn gold" disabled=${!!prog} onClick=${build}><${Icon} n="spark" />${nb ? "עדכון המחברת" : "בניית מחברת מאוחדת"}</button><button class="btn primary" onClick=${() => setWord(nb ? "menu" : "lessons")}><${Icon} n="doc" />Word</button></div></div>
+    ${prog && html`<div class="card stack" style="gap:8px"><span class="small">${prog.t}</span><${Bar} v=${prog.v} /></div>`}
+    <${Tabs} value=${view} onChange=${setView} tabs=${[["merged", "מחברת מאוחדת לפי נושאים"], ["lessons", "סיכומים לפי שיעור"]]} />
+    ${view === "merged" ? (nb ? (chapters === null ? html`<${Busy} label="טוען פרקים…" />` : html`<article class="stack">
+        <nav class="card"><h3 style="margin-bottom:8px">תוכן עניינים</h3><ol style="margin:0;padding-inline-start:1.3em;columns:2 260px">${chapters.map((ch, i) => html`<li><a href=${"#c-" + c.id} onClick=${(e) => { e.preventDefault(); document.getElementById("ch-" + i)?.scrollIntoView({ behavior: "smooth" }); }}>${ch.title}</a></li>`)}<li><a href=${"#c-" + c.id} onClick=${(e) => { e.preventDefault(); document.getElementById("glossary")?.scrollIntoView({ behavior: "smooth" }); }}>מילון מושגים</a></li><li><a href=${"#c-" + c.id} onClick=${(e) => { e.preventDefault(); document.getElementById("prep")?.scrollIntoView({ behavior: "smooth" }); }}>הכנה למבחן</a></li></ol></nav>
+        <div class="card"><${Md} text=${nb.introduction} /></div>
+        ${chapters.map((ch, i) => html`<section class="card stack" id=${"ch-" + i} style="gap:8px;scroll-margin-top:80px"><h2><span class="muted">פרק ${i + 1}: </span>${ch.title}</h2>${ch.lessonNumbers?.length > 0 && html`<span class="tiny muted">מתוך שיעורים ${ch.lessonNumbers.join(", ")}</span>`}<${Md} text=${ch.content} /></section>`)}
+        <section class="card stack" id="glossary" style="scroll-margin-top:80px"><h2>מילון מושגים</h2><div class="grid2">${(nb.glossary || []).map((k) => html`<div class="card tight" style="padding:10px 12px"><b dir=${dirOf(k.term)}>${k.term}</b><p class="small muted">${k.definition}</p></div>`)}</div></section>
+        <section class="card stack" id="prep" style="background:var(--gold-soft);border-color:transparent;scroll-margin-top:80px"><h2>הכנה למבחן</h2><${Md} text=${nb.examPrep} /></section>
+      </article>`) : html`<${Empty} icon="spark" title="עוד לא נבנתה מחברת מאוחדת" text="המחברת המאוחדת מארגנת את כל החומר לפי נושאים, עם מילון מושגים ודף הכנה למבחן." />`)
+      : html`<div class="stack">${ready.map((l, i) => html`<section class="stack"><h2><span class="muted">שיעור ${i + 1} · </span><a href=${"#l-" + l.id}>${l.title}</a></h2><${SummaryView} l=${l} c=${c} /></section>`)}</div>`}
+    ${word === "menu" && html`<${Modal} title="הורדה ל-Word" onClose=${() => setWord(null)}><div class="stack">
+        <button class="opt" onClick=${() => setWord("full")}><span class="grow"><b>מחברת מלאה</b><span class="small muted" style="display:block">פרקים לפי נושאים, מילון והכנה למבחן, ובנספחים הסיכום של כל שיעור ושאלות תרגול עם מפתח תשובות</span></span></button>
+        <button class="opt" onClick=${() => setWord("merged")}><span class="grow"><b>מחברת מאוחדת בלבד</b><span class="small muted" style="display:block">רק הפרקים, המילון ודף ההכנה (קצר יותר)</span></span></button></div><//>`}
+    ${(word === "full" || word === "merged" || word === "lessons") && html`<${WordDialog} title=${`${c.name} - מחברת`} settings=${store.settings} onClose=${() => setWord(null)} build=${wordBuild(word !== "merged")} />`}
+  </div>`;
+}
+
+/** Builds a .docx, then offers: save to this device, or save to Google Drive. */
+function WordDialog({ title, build, settings, onClose }) {
+  const [blob, setBlob] = useState(null); const [err, setErr] = useState(""); const [busy, setBusy] = useState(""); const [driveFile, setDriveFile] = useState(null);
+  useEffect(() => { build().then(setBlob).catch((e) => setErr("יצירת הקובץ נכשלה: " + (e.message || e))); }, []);
+  const filename = `${title}.docx`.replace(/[\\/:*?"<>|]+/g, " ");
+  return html`<${Modal} title="קובץ Word" onClose=${onClose}>
+    ${!blob && !err && html`<${Busy} label="מכין קובץ Word מעוצב (RTL, David 12)…" />`}
+    ${err && html`<div class="notice bad">${err}</div>`}
+    ${blob && html`<div class="stack">
+      <p class="muted">הקובץ מוכן: <b dir="rtl">${filename}</b> (${Math.max(1, Math.round(blob.size / 1024))}KB).</p>
+      <div class="row">
+        <button class="btn primary" disabled=${!!busy} onClick=${async () => { setBusy("save"); try { if (await saveFile(filename, blob)) pushToast("הקובץ נשמר", "good"); } catch (e) { pushToast(e.message, "bad"); } finally { setBusy(""); } }}><${Icon} n="doc" />שמירה במחשב</button>
+        <button class="btn ghost" disabled=${!!busy} onClick=${async () => { setBusy("drive"); try { const f = await saveDocxToDrive(blob, filename, settings); setDriveFile(f || {}); pushToast("נשמר בגוגל דרייב, בתיקייה ״הממלכה של גל״", "good"); } catch (e) { pushToast(e.message, "bad"); } finally { setBusy(""); } }}>${busy === "drive" ? html`<${Busy} label="שומר בדרייב…" />` : html`<${Icon} n="drive" />שמירה בגוגל דרייב`}</button>
+      </div>
+      ${driveFile?.viewUrl && html`<a href=${driveFile.viewUrl} target="_blank" rel="noopener">פתיחת הקובץ בדרייב</a>`}
+    </div>`}
+  <//>`;
+}
+
+/* ---------------- Exams & practice (simulation + open questions + mistakes) ---------------- */
+function ExamsTab({ c, lessons, attempts, exams }) {
+  const ready = lessons.filter((l) => l.summary);
+  const [sel, setSel] = useState(null); const [count, setCount] = useState(20); const [diff, setDiff] = useState("medium"); const [mins, setMins] = useState(0); const [weakOn, setWeakOn] = useState(true); const [styleOn, setStyleOn] = useState(true); const [kind, setKind] = useState("mc");
+  const [busy, setBusy] = useState(false); const [run, setRun] = useState(null); const [open, setOpen] = useState(null);
+  const chosen = sel || new Set(ready.map((l) => l.id));
+  const stats = topicStats(attempts.filter((a) => a.kind !== "open")); const weak = weakTopics(stats); const mist = mistakes(attempts); const style = examStyle(exams);
+  async function gen() {
+    const ls = ready.filter((l) => chosen.has(l.id)); if (!ls.length) return pushToast("בחר לפחות שיעור אחד", "bad");
+    setBusy(true);
+    try {
+      const full = await withSections(ls);
+      const material = fitBytes(full.map((l, k) => lessonDigest(l, ready.indexOf(ls[k]) + 1)).join("\n\n---\n\n"), 180000);
+      if (kind === "mc") {
+        const r = await askJSON(P_.exam(c, material, count, diff, weakOn ? weak : [], styleOn ? style : ""));
+        const qs = cleanQuestions(r.questions); if (!qs.length) throw new Error("לא התקבלו שאלות. נסה שוב.");
+        setRun({ qs, kind: "exam", timer: mins ? mins * 60 : undefined, k: Date.now() });
+      } else {
+        const r = await askJSON(P_.open(c, ls.length === 1 ? ls[0].title : "כל הקורס", material, clamp(Math.round(count / 4), 3, 8), styleOn ? style : ""));
+        const qs = cleanOpen(r.questions); if (!qs.length) throw new Error("לא התקבלו שאלות. נסה שוב.");
+        setOpen({ qs, k: Date.now() });
+      }
+    } catch (e) { pushToast(e.message, "bad"); } finally { setBusy(false); }
+  }
+  if (run) return html`<div class="stack"><button class="btn quiet sm" style="justify-self:start" onClick=${() => setRun(null)}>חזרה למבחנים</button><${QuizRunner} key=${run.k} questions=${run.qs} mode=${run.kind === "exam" ? "exam" : "practice"} timeLimit=${run.timer} onFinish=${(ans, dur) => put("attempts", newId(), { courseId: c.id, lessonId: null, kind: run.kind, score: scoreOf(run.qs, ans), questions: run.qs, answers: ans, duration: dur, createdAt: Date.now() }).catch(() => {})} onMistakes=${(w) => setRun({ qs: w.map(shuffleQ), kind: "mistakes", k: Date.now() })} /></div>`;
+  if (open) return html`<div class="stack"><button class="btn quiet sm" style="justify-self:start" onClick=${() => setOpen(null)}>חזרה למבחנים</button><${OpenPractice} key=${open.k} questions=${open.qs} courseId=${c.id} /></div>`;
+  if (!ready.length) return html`<${Empty} icon="target" title="סימולציות ייפתחו אחרי השיעור המסוכם הראשון" />`;
+  return html`<div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));align-items:start">
+    <section class="card stack">
+      <h2>סימולציית מבחן</h2>
+      <${Tabs} value=${kind} onChange=${setKind} tabs=${[["mc", "אמריקאי"], ["open", "שאלות פתוחות עם בדיקה"]]} />
+      <div><div class="row between"><span class="lbl">על אילו שיעורים?</span><button class="btn quiet sm" onClick=${() => setSel(chosen.size === ready.length ? new Set() : new Set(ready.map((l) => l.id)))}>${chosen.size === ready.length ? "נקה הכל" : "בחר הכל"}</button></div>
+        <div class="stack" style="gap:4px;max-height:200px;overflow-y:auto">${ready.map((l, i) => html`<label class="row small" style="gap:8px;cursor:pointer"><input type="checkbox" checked=${chosen.has(l.id)} onChange=${(e) => { const n = new Set(chosen); e.target.checked ? n.add(l.id) : n.delete(l.id); setSel(n); }} /><span class="truncate">${i + 1}. ${l.title}</span></label>`)}</div></div>
+      <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+        <div><label class="lbl" for="ex-n">${kind === "mc" ? "שאלות" : "היקף"}</label><select id="ex-n" class="select" value=${count} onChange=${(e) => setCount(+e.target.value)}>${(kind === "mc" ? [10, 20, 30, 40] : [12, 20, 28]).map((n) => html`<option value=${n}>${kind === "mc" ? n : ({ 12: "3 שאלות", 20: "5 שאלות", 28: "7 שאלות" })[n]}</option>`)}</select></div>
+        ${kind === "mc" && html`<div><label class="lbl" for="ex-d">קושי</label><select id="ex-d" class="select" value=${diff} onChange=${(e) => setDiff(e.target.value)}><option value="easy">קל</option><option value="medium">בינוני</option><option value="hard">קשה</option></select></div>
+        <div><label class="lbl" for="ex-t">זמן</label><select id="ex-t" class="select" value=${mins} onChange=${(e) => setMins(+e.target.value)}><option value="0">בלי שעון</option>${[15, 30, 60, 90, 120, 180].map((m) => html`<option value=${m}>${m} דק׳</option>`)}</select></div>`}
+      </div>
+      ${weak.length > 0 && kind === "mc" && html`<label class="row small" style="gap:8px"><input type="checkbox" checked=${weakOn} onChange=${(e) => setWeakOn(e.target.checked)} />משקל גבוה לנושאים החלשים (${weak.slice(0, 3).join(", ")})</label>`}
+      ${style && html`<label class="row small" style="gap:8px"><input type="checkbox" checked=${styleOn} onChange=${(e) => setStyleOn(e.target.checked)} />בסגנון המבחנים הקודמים בקורס</label>`}
+      <button class="btn primary lg" disabled=${busy || !chosen.size} onClick=${gen}>${busy ? html`<${Busy} label="Claude מכין מבחן…" />` : "צור מבחן"}</button>
+    </section>
+    <aside class="stack">
+      ${mist.length > 0 && html`<div class="card stack" style="gap:8px"><h3>בנק הטעויות</h3><p class="small muted">${mist.length} שאלות שטעית בהן לאחרונה. תרגול ממוקד הוא הדרך המהירה ביותר להשתפר.</p><button class="btn gold" onClick=${() => setRun({ qs: mist.map(shuffleQ), kind: "mistakes", k: Date.now() })}>תרגול הטעויות</button></div>`}
+      ${stats.length > 0 && html`<div class="card stack" style="gap:10px"><h3>חוזקות וחולשות</h3>${stats.slice(0, 10).map((s) => html`<div class="stack" style="gap:4px"><div class="row between small"><span class="truncate">${s.topic}</span><b style=${{ color: s.pct < 60 ? "var(--bad)" : s.pct < 80 ? "var(--warn)" : "var(--good)" }}>${s.pct}%</b></div><${Bar} v=${s.pct / 100} /></div>`)}</div>`}
+      ${attempts.length > 0 && html`<div class="card stack" style="gap:6px"><h3>היסטוריה</h3>${[...attempts].sort((a, b) => b.createdAt - a.createdAt).slice(0, 8).map((a) => html`<div class="row between small"><span class="muted">${fmtDate(a.createdAt)} · ${({ exam: "סימולציה", mistakes: "טעויות", lesson: "מבחן שיעור", open: "שאלה פתוחה" })[a.kind] || ""}</span><b>${a.score}%</b></div>`)}</div>`}
+    </aside>
+  </div>`;
+}
+
+/* ---------------- Past exams ---------------- */
+function PastExams({ c, lessons, exams, store }) {
+  const [adding, setAdding] = useState(false); const [openId, setOpenId] = useState(null);
+  const ex = openId ? exams.find((e) => e.id === openId) : null;
+  if (ex) return html`<${PastExamView} e=${ex} c=${c} lessons=${lessons} onBack=${() => setOpenId(null)} />`;
+  return html`<div class="stack">
+    <div class="card row between"><div class="stack" style="gap:2px"><b>מבחנים קודמים</b><span class="small muted">מעלים מבחנים משנים קודמות, ו-Claude מנתח את המבנה והנושאים, כותב פתרון מודרך, ובונה מבחני תרגול באותו סגנון.</span></div><button class="btn primary" onClick=${() => setAdding(true)}><${Icon} n="plus" />הוספת מבחן</button></div>
+    ${exams.length ? [...exams].sort((a, b) => b.createdAt - a.createdAt).map((e) => html`<button class="card tight list-item opt" style="border-radius:var(--radius)" onClick=${() => setOpenId(e.id)}><span class="num"><${Icon} n="scroll" /></span><span class="grow" style="min-width:0;text-align:start"><b class="truncate" style="display:block">${e.title}</b><span class="tiny muted">${fmtDate(e.createdAt)} · ${Math.round((e.chars || 0) / 1000)} אלף תווים${e.analysis ? " · נותח" : ""}${e.solution ? " · יש פתרון" : ""}</span></span>${e.analysis ? html`<span class="chip good">נותח</span>` : html`<span class="chip">ממתין לניתוח</span>`}</button>`)
+      : html`<${Empty} icon="scroll" title="עוד אין מבחנים קודמים" text="מבחנים משנים קודמות הם החומר הכי טוב להכנה. אפשר להעלות PDF, Word או צילום, גם סרוק." />`}
+    ${adding && html`<${AddExam} c=${c} onClose=${() => setAdding(false)} onDone=${(id) => { setAdding(false); setOpenId(id); }} />`}
+  </div>`;
+}
+function AddExam({ c, onClose, onDone }) {
+  const [src, setSrc] = useState("file"); const [title, setTitle] = useState(""); const [text, setText] = useState(""); const [stage, setStage] = useState(""); const [busy, setBusy] = useState(false);
+  async function save() {
+    if (!text.trim()) return; setBusy(true);
+    try { const id = newId(); const n = await saveText("examTexts", id, text.trim()); await put("exams", id, { courseId: c.id, title: title.trim() || "מבחן קודם", createdAt: Date.now(), textParts: n, chars: text.length, source: src }); onDone(id); }
+    catch (e) { pushToast("השמירה נכשלה: " + e.message, "bad"); setBusy(false); }
+  }
+  return html`<${Modal} title="הוספת מבחן קודם" onClose=${onClose}>
+    <div><label class="lbl" for="ae-title">שם</label><input id="ae-title" class="input" value=${title} onInput=${(e) => setTitle(e.target.value)} placeholder="למשל: מבחן מועד א׳ 2024" /></div>
+    <${Tabs} value=${src} onChange=${setSrc} tabs=${[["file", "קובץ מהמחשב"], ["drive", "מגוגל דרייב"], ["paste", "הדבקה"]]} />
+    ${src === "file" && html`<${FileDrop} accept=".pdf,.docx,.txt,.md,image/*" label="גרור לכאן את המבחן, או לחץ לבחירה" hint="PDF (גם סרוק), Word, תמונה או טקסט" onFile=${async (f) => { try { const t = await fileToText(f, setStage); setText(t); if (!title) setTitle(f.name.replace(/\.[^.]+$/, "")); setStage(""); } catch (e) { setStage(""); pushToast(e.message, "bad"); } }} />`}
+    ${src === "drive" && html`<${DrivePicker} kind="exam" onPick=${async (f) => { setStage("קורא את הקובץ מהדרייב…"); try { setText(resultText(await drive("read_file_content", { fileId: f.id }))); if (!title) setTitle(f.title.replace(/\.[^.]+$/, "")); setStage(""); } catch (e) { setStage(""); pushToast(e.message, "bad"); } }} />`}
+    ${stage && html`<${Busy} label=${stage} />`}
+    <div><label class="lbl" for="ae-text">טקסט המבחן</label><textarea id="ae-text" class="textarea" style="min-height:200px" value=${text} onInput=${(e) => setText(e.target.value)} placeholder="כאן יופיע טקסט המבחן. בדוק שהוא נקרא נכון, ואפשר לתקן."></textarea></div>
+    <div class="row"><button class="btn primary" disabled=${busy || !text.trim()} onClick=${save}>שמירה</button><button class="btn ghost" onClick=${onClose}>ביטול</button></div>
+  <//>`;
+}
+function PastExamView({ e, c, lessons, onBack }) {
+  const [busy, setBusy] = useState(""); const [solution, setSolution] = useState(e.solution || ""); const [showText, setShowText] = useState(false); const [text, setText] = useState(null); const [confirm, setConfirm] = useState(false);
+  const getText = async () => text ?? (await loadText("examTexts", e.id, e.textParts).then((t) => (setText(t), t)));
+  async function analyze() { setBusy("analyze"); try { const a = await askJSON(P_.analyze(c, fitBytes(await getText(), 200000))); await patch("exams", e.id, { analysis: { summary: String(a.summary || ""), structure: String(a.structure || ""), questionTypes: (a.questionTypes || []).map(String), topics: (a.topics || []).filter((t) => t?.topic).map((t) => ({ topic: String(t.topic), weight: clamp(+t.weight || 0, 0, 100), note: String(t.note || "") })), difficulty: String(a.difficulty || ""), tips: (a.tips || []).map(String) } }); pushToast("הניתוח מוכן", "good"); } catch (err) { pushToast(err.message, "bad"); } finally { setBusy(""); } }
+  async function solve() {
+    setBusy("solve"); setSolution("");
+    try {
+      const material = fitBytes(courseDigest(await withSections(lessons), 90000), 90000);
+      const out = await askText(P_.solve(c, fitBytes(await getText(), 140000), material), { onText: setSolution });
+      setSolution(out); await patch("exams", e.id, { solution: fitBytes(out, 240000) }); pushToast("הפתרון המודרך נשמר", "good");
+    } catch (err) { pushToast(err.message, "bad"); } finally { setBusy(""); }
+  }
+  const a = e.analysis;
+  return html`<div class="stack">
+    <div class="row between"><button class="btn quiet sm" onClick=${onBack}>חזרה למבחנים הקודמים</button><button class="btn quiet sm" onClick=${() => setConfirm(true)}><${Icon} n="trash" />מחיקה</button></div>
+    <div class="card stack" style="gap:8px"><h2>${e.title}</h2><span class="small muted">${fmtDate(e.createdAt)} · ${Math.round((e.chars || 0) / 1000)} אלף תווים</span>
+      <div class="row"><button class="btn primary" disabled=${!!busy} onClick=${analyze}>${busy === "analyze" ? html`<${Busy} label="מנתח…" />` : html`<${Icon} n="spark" />${a ? "ניתוח מחדש" : "ניתוח המבחן"}`}</button>
+        <button class="btn ghost" disabled=${!!busy} onClick=${solve}>${busy === "solve" ? html`<${Busy} label="כותב פתרון…" />` : html`<${Icon} n="pen" />${e.solution ? "פתרון מחדש" : "פתרון מודרך"}`}</button>
+        <button class="btn quiet" onClick=${async () => { await getText(); setShowText(!showText); }}>${showText ? "הסתר" : "הצג"} את טקסט המבחן</button></div></div>
+    ${showText && text !== null && html`<div class="card"><p style="white-space:pre-wrap" dir="rtl">${text}</p></div>`}
+    ${a && html`<div class="card stack"><h3>ניתוח המבחן</h3><p>${a.summary}</p>${a.structure && html`<p><b>מבנה: </b>${a.structure}</p>`}${a.difficulty && html`<p><b>רמת קושי: </b>${a.difficulty}</p>`}${a.questionTypes?.length > 0 && html`<div class="row" style="gap:6px">${a.questionTypes.map((t) => html`<span class="chip">${t}</span>`)}</div>`}
+      ${a.topics?.length > 0 && html`<div class="stack" style="gap:8px"><b>נושאים ומשקלם</b>${[...a.topics].sort((x, y) => y.weight - x.weight).map((t) => html`<div class="stack" style="gap:3px"><div class="row between small"><span>${t.topic}</span><span class="muted">${t.weight}%</span></div><${Bar} v=${t.weight / 100} />${t.note && html`<span class="tiny muted">${t.note}</span>`}</div>`)}</div>`}
+      ${a.tips?.length > 0 && html`<div class="notice"><b>טיפים להכנה</b><ul style="margin:4px 0 0;padding-inline-start:1.2em">${a.tips.map((t) => html`<li>${t}</li>`)}</ul></div>`}
+      <p class="small muted">הניתוח הזה משמש גם את "סימולציית מבחן", את בניית המחברת ואת הצ׳אט של הקורס.</p></div>`}
+    ${solution && html`<div class="card stack"><h3>פתרון מודרך</h3><${Md} text=${solution} /></div>`}
+    ${confirm && html`<${Confirm} title="למחוק את המבחן?" text="המבחן, הניתוח והפתרון יימחקו." action="מחיקה" onClose=${() => setConfirm(false)} onYes=${async () => { await deleteText("examTexts", e.id); await del("exams", e.id); onBack(); }} />`}
+  </div>`;
+}
+
+/* ---------------- Chat ---------------- */
+function Chat({ storageKey, scope, build, suggestions, disabled }) {
+  const [msgs, setMsgs] = useState(() => { try { return JSON.parse(sessionStorage.getItem(storageKey) || "[]"); } catch { return []; } });
+  const [input, setInput] = useState(""); const [busy, setBusy] = useState(false); const ctx = useRef(null); const ac = useRef(null); const end = useRef();
+  useEffect(() => { try { sessionStorage.setItem(storageKey, JSON.stringify(msgs.slice(-30))); } catch {} end.current?.scrollIntoView({ block: "end", behavior: "smooth" }); }, [msgs]);
+  async function send(q) {
+    q = q.trim(); if (!q || busy) return; setInput("");
+    const history = [...msgs, { role: "user", content: q }]; setMsgs([...history, { role: "assistant", content: "" }]); setBusy(true); ac.current = new AbortController();
+    try {
+      ctx.current ??= await build();
+      const turns = history.slice(-12).map((m) => ({ ...m }));
+      turns[0] = { role: "user", content: P_.chatSystem(scope, ctx.current) + "\n\nשאלת הסטודנט: " + turns[0].content };
+      if (turns[0].role !== "user") turns.shift();
+      const text = await askText(turns, { onText: (t) => setMsgs([...history, { role: "assistant", content: t }]), signal: ac.current.signal });
+      setMsgs([...history, { role: "assistant", content: text || "(אין תשובה)" }]);
+    } catch (e) { setMsgs([...history, { role: "assistant", content: "⚠️ " + e.message }]); } finally { setBusy(false); }
+  }
+  if (disabled) return html`<${Empty} icon="chat" title="הצ׳אט יתעורר אחרי השיעור המסוכם הראשון" />`;
+  return html`<div class="card chat"><div class="chat-log">
+      ${!msgs.length && html`<div class="empty" style="padding:20px"><div class="glyph"><${Icon} n="chat" s=${24} /></div><p class="muted" style="max-width:440px">שאל כל שאלה על ${scope}. התשובות מבוססות על החומר שלך.</p><div class="row" style="justify-content:center">${suggestions.map((s) => html`<button class="btn ghost sm" onClick=${() => send(s)}>${s}</button>`)}</div></div>`}
+      ${msgs.map((m) => html`<div class=${"bubble " + (m.role === "user" ? "me" : "ai")}>${m.role === "assistant" ? (m.content ? html`<${Md} text=${m.content} />` : html`<${Busy} label="חושב…" />`) : html`<p style="white-space:pre-wrap">${m.content}</p>`}</div>`)}
+      <div ref=${end}></div></div>
+    <form onSubmit=${(e) => { e.preventDefault(); send(input); }}><input class="input" placeholder="שאל כל דבר על החומר…" value=${input} onInput=${(e) => setInput(e.target.value)} aria-label="שאלה" />
+      ${busy ? html`<button type="button" class="btn ghost" onClick=${() => ac.current?.abort()}>עצור</button>` : html`<button class="btn primary" disabled=${!input.trim()}>שלח</button>`}
+      ${msgs.length > 0 && !busy && html`<button type="button" class="btn quiet" onClick=${() => { setMsgs([]); ctx.current = null; }} aria-label="שיחה חדשה"><${Icon} n="trash" /></button>`}</form></div>`;
+}
+
+/* ---------------- Study plan ---------------- */
+function PlanTab({ c, lessons, cards, attempts, exams }) {
+  const [date, setDate] = useState(c.examDate || ""); const [hours, setHours] = useState(2); const [busy, setBusy] = useState(false);
+  const plan = c.plan; const done = new Set(c.planDone || []); const today = todayISO();
+  async function gen() {
+    if (!date) return pushToast("בחר תאריך מבחן", "bad"); if (date < today) return pushToast("תאריך המבחן כבר עבר", "bad");
+    setBusy(true);
+    try {
+      const ls = fitBytes((await withSections(lessons.filter((l) => l.summary))).map((l, i) => lessonDigest(l, i + 1, false)).join("\n\n") || "(עוד אין שיעורים מסוכמים)", 120000) + (examStyle(exams) ? "\n\nניתוח מבחנים קודמים:\n" + examStyle(exams) : "");
+      const r = await askJSON(P_.plan(c, today, date, hours, ls, weakTopics(topicStats(attempts.filter((a) => a.kind !== "open"))), cards.filter(isDue).length));
+      const days = (r.days || []).filter((d) => d?.date).map((d) => ({ date: String(d.date), focus: String(d.focus || ""), tasks: (d.tasks || []).map((t, i) => ({ id: `${d.date}-${i}`, title: String(t.title || ""), detail: String(t.detail || ""), kind: String(t.kind || "review") })) }));
+      await patch("courses", c.id, { examDate: date, plan: { days, tips: (r.tips || []).map(String), at: Date.now() }, planDone: [] });
+      pushToast("תוכנית הלימוד מוכנה", "good");
+    } catch (e) { pushToast(e.message, "bad"); } finally { setBusy(false); }
+  }
+  const toggle = (id) => { const n = new Set(done); n.has(id) ? n.delete(id) : n.add(id); patch("courses", c.id, { planDone: [...n] }).catch(() => pushToast("השמירה נכשלה", "bad")); };
+  const total = (plan?.days || []).reduce((s, d) => s + d.tasks.length, 0);
+  const KIND = { review: "חזרה", flashcards: "כרטיסיות", quiz: "מבחן", open: "שאלות פתוחות", exam: "סימולציה", past: "מבחן קודם", read: "קריאה", rest: "מנוחה" };
+  return html`<div class="stack">
+    <div class="card stack"><h2>תוכנית לימוד עד המבחן</h2>
+      <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));align-items:end">
+        <div><label class="lbl" for="pl-d">תאריך המבחן</label><input id="pl-d" type="date" class="input" min=${today} value=${date} onInput=${(e) => setDate(e.target.value)} /></div>
+        <div><label class="lbl" for="pl-h">שעות ביום</label><select id="pl-h" class="select" value=${hours} onChange=${(e) => setHours(+e.target.value)}>${[0.5, 1, 1.5, 2, 3, 4, 5, 6].map((h) => html`<option value=${h}>${h}</option>`)}</select></div>
+        <button class="btn primary" disabled=${busy || !date} onClick=${gen}>${busy ? html`<${Busy} label="בונה…" />` : html`<${Icon} n="cal" />${plan ? "בנה מחדש" : "בנה לי תוכנית"}`}</button>
+      </div><p class="hint">התוכנית מתחשבת בנושאים, בנושאים החלשים לפי המבחנים, בכרטיסיות שממתינות ובמבחנים הקודמים.</p></div>
+    ${plan ? html`
+      <div class="card row"><div class="grow"><${Bar} v=${total ? done.size / total : 0} /></div><span class="small muted">${done.size}/${total} משימות</span></div>
+      ${plan.tips?.length > 0 && html`<div class="notice small">${plan.tips.map((t) => html`<p>${t}</p>`)}</div>`}
+      ${plan.days.map((d) => { const isT = d.date === today; return html`<div class="card stack" style=${{ gap: "8px", opacity: d.date < today ? 0.7 : 1, borderColor: isT ? "var(--plum)" : undefined, borderWidth: isT ? "2px" : undefined }}>
+        <div class="row between"><b>${new Date(d.date + "T00:00:00").toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "short" })}${isT ? html` <span class="chip">היום</span>` : ""}</b><span class="small muted">${d.focus}</span></div>
+        ${d.tasks.map((t) => html`<label class="row" style="gap:10px;align-items:start;cursor:pointer"><input type="checkbox" style="margin-top:6px" checked=${done.has(t.id)} onChange=${() => toggle(t.id)} /><span style=${{ textDecoration: done.has(t.id) ? "line-through" : "none", color: done.has(t.id) ? "var(--muted)" : "inherit" }}><span class="chip" style="margin-inline-end:6px">${KIND[t.kind] || t.kind}</span><b>${t.title}</b>${t.detail && html`<span class="small muted" style="display:block">${t.detail}</span>`}</span></label>`)}</div>`; })}`
+      : html`<${Empty} icon="cal" title="עוד אין תוכנית" text="בחר תאריך מבחן ושעות ביום, ותקבל תוכנית יומית מותאמת." />`}
+  </div>`;
+}
+
+/* ---------------- Course settings ---------------- */
+function CourseSettings({ c, lessons, cards, exams, attempts }) {
+  const [edit, setEdit] = useState(false); const [confirm, setConfirm] = useState(false);
+  return html`<div class="grid2" style="align-items:start">
+    <div class="card stack"><h2>${c.name}</h2>${c.vocabulary && html`<p class="small muted">מונחים: ${c.vocabulary}</p>`}${c.examDate && html`<p class="small">מבחן: ${fmtDate(c.examDate + "T00:00:00")}</p>`}<button class="btn ghost" style="justify-self:start" onClick=${() => setEdit(true)}><${Icon} n="pen" />עריכת פרטי הקורס</button></div>
+    <div class="card stack"><h3 style="color:var(--bad)">מחיקת הקורס</h3><p class="small muted">נמחקים כל השיעורים, הסיכומים, המבחנים, הכרטיסיות והמחברת של הקורס.</p><button class="btn danger" style="justify-self:start" onClick=${() => setConfirm(true)}>מחיקת הקורס</button></div>
+    ${edit && html`<${CourseForm} course=${c} onClose=${() => setEdit(false)} />`}
+    ${confirm && html`<${Confirm} title=${`למחוק את "${c.name}"?`} text="הפעולה סופית ואי אפשר לשחזר." action="כן, למחוק" onClose=${() => setConfirm(false)} onYes=${async () => {
+      for (const l of lessons) { await deleteText("transcripts", l.id); await del("lessons", l.id); }
+      for (const x of cards) await del("cards", x.id); for (const x of attempts) await del("attempts", x.id);
+      for (const e of exams) { await deleteText("examTexts", e.id); await del("exams", e.id); }
+      for (let i = 0; i < (c.notebook?.chapterCount || 0); i++) await del("chapters", `${c.id}_${i}`);
+      await del("courses", c.id); go("");
+    }} />`}
+  </div>`;
+}
+
+/* ---------------- Search ---------------- */
+function SearchView({ store }) {
+  const [q, setQ] = useState(""); const [deep, setDeep] = useState(null); const [busy, setBusy] = useState(false);
+  const term = q.trim(); const low = term.toLowerCase();
+  const hits = term.length < 2 ? [] : store.lessons.flatMap((l) => {
+    const out = []; const s = l.summary;
+    if (l.title.toLowerCase().includes(low)) out.push({ l, where: "שם השיעור", text: l.title });
+    for (const sec of s?.sections || []) if ((sec.heading + " " + sec.content).toLowerCase().includes(low)) out.push({ l, where: "סיכום: " + sec.heading, text: snippet(sec.content, term) });
+    for (const k of s?.keyTerms || []) if ((k.term + k.definition).toLowerCase().includes(low)) out.push({ l, where: "מושג", text: `${k.term}: ${k.definition}` });
+    return out;
+  });
+  async function searchTranscripts() {
+    setBusy(true); const out = [];
+    try { for (const l of store.lessons) { const t = await loadText("transcripts", l.id, l.textParts); let i = t.toLowerCase().indexOf(low), n = 0; while (i >= 0 && n < 3) { out.push({ l, where: "תמלול", text: snippet(t.slice(Math.max(0, i - 120), i + 200), term) }); i = t.toLowerCase().indexOf(low, i + term.length); n++; } } setDeep(out); }
+    finally { setBusy(false); }
+  }
+  const all = [...hits, ...(deep || [])]; const groups = new Map(); for (const h of all) groups.set(h.l.id, [...(groups.get(h.l.id) || []), h]);
+  return html`<section class="stack"><h1>חיפוש</h1><input class="input" style="min-height:52px;font-size:1.1rem" placeholder="מושג, נושא, או משפט מהשיעור…" value=${q} onInput=${(e) => { setQ(e.target.value); setDeep(null); }} autofocus aria-label="חיפוש" />
+    ${term.length >= 2 && html`<div class="row"><button class="btn ghost sm" disabled=${busy} onClick=${searchTranscripts}>${busy ? html`<${Busy} label="מחפש בתמלולים…" />` : "חפש גם בתמלולים המלאים"}</button><span class="small muted">${all.length} תוצאות</span></div>`}
+    ${term.length < 2 ? html`<p class="muted">החיפוש עובר על כל הסיכומים והמושגים בכל הקורסים.</p>` : !all.length ? html`<p class="muted">לא נמצאו תוצאות.</p>` : [...groups].map(([id, list]) => { const l = list[0].l; const c = store.courses.find((x) => x.id === l.courseId); return html`<div class="card stack" style="gap:6px"><a href=${"#l-" + id}><b>${l.title}</b></a><span class="tiny muted">${c?.name || ""}</span>${list.slice(0, 4).map((h) => html`<div class="small"><span class="chip" style="margin-inline-end:6px">${h.where}</span>${highlight(h.text, term)}</div>`)}</div>`; })}
+  </section>`;
+}
+function snippet(t, q, r = 110) { const i = t.toLowerCase().indexOf(q.toLowerCase()); if (i < 0) return t.slice(0, r * 2); const s = Math.max(0, i - r), e = Math.min(t.length, i + q.length + r); return (s ? "…" : "") + t.slice(s, e) + (e < t.length ? "…" : ""); }
+
+/* ---------------- Preferences ---------------- */
+function PrefsView({ store }) {
+  const [driveState, setDriveState] = useState(""); const [busy, setBusy] = useState("");
+  async function testDrive() { setBusy("test"); try { await drive("list_recent_files", { pageSize: 1, excludeContentSnippets: true }); setDriveState("ok"); } catch (e) { setDriveState(e.message); } finally { setBusy(""); } }
+  async function backup() {
+    setBusy("backup");
+    try {
+      const transcripts = {}; for (const l of store.lessons) transcripts[l.id] = await loadText("transcripts", l.id, l.textParts);
+      const data = { exportedAt: new Date().toISOString(), courses: store.courses, lessons: store.lessons, transcripts, cards: store.cards, attempts: store.attempts, exams: store.exams };
+      if (await saveFile(`הממלכה של גל - גיבוי ${todayISO()}.json`, JSON.stringify(data))) pushToast("הגיבוי נשמר", "good");
+    } catch (e) { pushToast(e.message, "bad"); } finally { setBusy(""); }
+  }
+  return html`<section class="stack"><h1>הגדרות</h1></section>
+    <div class="card stack"><h2>החשבון</h2><p class="muted">מחובר כ-<b>${caps.name || "משתמש Claude"}</b>. הקורסים והסיכומים שלך שמורים בתוך Claude, פרטיים רק לך, וזמינים מכל מכשיר שבו תפתח את הדף.</p></div>
+    <div class="card stack"><h2>Google Drive</h2><p class="muted">משמש לייבוא תמלולים ומבחנים קודמים, ולשמירת קובצי Word בתיקייה "הממלכה של גל". החיבור נעשה דרך חשבון ה-Claude שלך (Settings, ואז Connectors, ואז Google Drive).</p>
+      <div class="row"><button class="btn ghost" disabled=${!!busy} onClick=${testDrive}>${busy === "test" ? html`<${Busy} label="בודק…" />` : "בדיקת החיבור"}</button>${driveState === "ok" ? html`<span class="chip good">מחובר</span>` : driveState && html`<span class="small" style="color:var(--bad)">${driveState}</span>`}</div>
+      ${store.settings?.driveFolderId && html`<p class="small muted">התיקייה בדרייב כבר נוצרה.</p>`}</div>
+    <div class="card stack"><h2>גיבוי</h2><p class="muted">הורדת קובץ עם כל הקורסים, הסיכומים, התמלולים והתרגולים, למקרה הצורך.</p><button class="btn ghost" style="justify-self:start" disabled=${!!busy} onClick=${backup}>${busy === "backup" ? html`<${Busy} label="מכין…" />` : "הורדת גיבוי מלא"}</button></div>
+    <div class="card stack"><h2>שימוש ועלות</h2><p class="muted">הסיכומים, המבחנים והצ׳אט משתמשים במכסת ה-Claude הרגילה של החשבון שלך, בלי תשלום נוסף. סיכום של שיעור ארוך מאוד משתמש בכמה בקשות. אם תגיע למגבלה, האתר יגיד לך ותוכל להמשיך מאותה נקודה אחר כך.</p></div>`;
+}
+
+/* ---------------- Help ---------------- */
+function HelpView() {
+  return html`<section class="stack"><h1>מדריך</h1><p class="muted">איך להפיק את המקסימום מהממלכה.</p></section>
+    <div class="card stack"><h2>איך מקליטים ומתמללים שיעור בחינם</h2>
+      <p class="muted">דף בתוך Claude לא יכול להקליט מהמיקרופון. התמלול נעשה בכלי חינמי, ואחר כך מייבאים אותו לכאן בלחיצה.</p>
+      <h3>במחשב: הקלדה קולית בגוגל דוקס (מומלץ, תומך בעברית)</h3>
+      <ol class="steps">
+        <li><span>פתח מסמך חדש ב-Google Docs בדפדפן Chrome, ותן לו את שם השיעור.</span></li>
+        <li><span>בתפריט: <b>כלים</b>, ואז <b>הקלדה קולית</b> (או <span class="kbd">Ctrl+Shift+S</span>). בחר <b>עברית</b> ולחץ על המיקרופון.</span></li>
+        <li><span>השאר את הלשונית של המסמך פתוחה ובחזית לאורך השיעור. אם המיקרופון הפסיק (הפך לאפור), לחץ עליו שוב.</span></li>
+        <li><span>בסוף השיעור, כאן באתר: <b>שיעור חדש</b>, ואז <b>מגוגל דרייב</b>, ובחר את המסמך.</span></li>
+      </ol>
+      <h3>בטלפון אנדרואיד: Live Transcribe</h3>
+      <p class="muted">אפליקציה חינמית של גוגל שמתמללת ברציפות, כולל עברית. בסוף השיעור מעתיקים את הטקסט ומדביקים אותו כאן (שיעור חדש, ואז הדבקה), או שומרים אותו כמסמך בדרייב.</p>
+      <h3>שיעור מקוון</h3>
+      <p class="muted">בזום ובטימס אפשר להוריד את התמלול האוטומטי (קובץ VTT או Word) ולהעלות אותו כאן. גם להרצאה מוקלטת ביוטיוב יש תמלול: "הצגת התמליל", מעתיקים ומדביקים.</p>
+    </div>
+    <div class="card stack"><h2>מה קורה כשלוחצים "סכם"</h2><p class="muted">Claude קורא את התמלול בחלקים (כחצי שעה דיבור בכל חלק), מסכם כל חלק לפי נושאים, ואז בונה סיכום מאוחד, מבחן אמריקאי, כרטיסיות ושאלות פתוחות. בשיעור של 3 שעות זה לוקח כמה דקות. אם משהו נעצר באמצע, "נסה שוב" ממשיך מאותה נקודה.</p></div>
+    <div class="card stack"><h2>מבחנים קודמים</h2><p class="muted">בלשונית "מבחנים קודמים" בכל קורס מעלים מבחן (PDF, גם סרוק, Word או צילום). Claude מנתח את המבנה והנושאים, כותב פתרון מודרך, והסימולציות בונות שאלות באותו סגנון.</p></div>
+    <div class="card stack"><h2>שיתוף עם בת הזוג</h2>
+      <ol class="steps">
+        <li><span>בכפתור <b>Share</b> של הדף ב-Claude, הזמן אותה לפי המייל בתור <b>עורכת</b> (Editor). בלי הרשאת עריכה היא לא תוכל לשמור.</span></li>
+        <li><span>היא פותחת את הקישור בחשבון ה-Claude שלה. הקורסים שלה פרטיים לה, ושלך פרטיים לך: אף אחד לא רואה את הנתונים של השני.</span></li>
+        <li><span>הסיכומים שלה משתמשים במכסת ה-Claude שלה, וחיבור הדרייב שלה הוא שלה.</span></li>
+      </ol></div>
+    <div class="card stack"><h2>טיפים ללמידה</h2><ul style="margin:0;padding-inline-start:1.2em" class="muted">
+      <li>חזרה יומית קצרה על הכרטיסיות עדיפה על שעה פעם בשבוע.</li><li>שאלות פתוחות עם בדיקה מכינות למבחן הרבה יותר מקריאה חוזרת.</li><li>התחל מהמבחנים הקודמים: הם מראים מה המרצה באמת שואל.</li><li>אפשר לערוך כל נושא בסיכום (כפתור "עריכה") ולהוסיף הערות משלך.</li></ul></div>`;
+}
+
+/* ===================================================================== */
+const spin = document.createElement("style"); spin.textContent = "@keyframes spin{to{transform:rotate(360deg)}} .md.center{text-align:center}"; document.head.appendChild(spin);
+render(html`<${App} />`, document.getElementById("app"));
+</script>
