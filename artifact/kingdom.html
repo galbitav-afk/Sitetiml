@@ -124,6 +124,16 @@ label.lbl { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 4
 
 .overlay { position: fixed; inset: 0; z-index: 50; background: rgb(15 10 25 / .55); display: grid; place-items: center; padding: 16px; }
 .dialog { background: var(--card); border-radius: 18px; width: min(640px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 22px; display: grid; gap: 16px; }
+.recbar { position: fixed; inset-inline-start: 16px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 40; display: flex; gap: 10px; align-items: center; background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 99px; text-decoration: none; font-weight: 600; box-shadow: 0 8px 24px rgb(20 10 40 / .25); }
+.recdot { width: 11px; height: 11px; border-radius: 99px; background: #e5484d; flex: none; animation: blink 1.3s ease-in-out infinite; }
+.recdot.off { background: var(--muted); animation: none; }
+@keyframes blink { 50% { opacity: .25; } }
+.rec-clock { font-size: 1.9rem; font-weight: 700; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; line-height: 1; }
+.live-box { max-height: 56vh; min-height: 220px; overflow-y: auto; display: grid; gap: 10px; align-content: start; padding: 14px 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; line-height: 1.8; }
+.live-box p { margin: 0; }
+.live-box .ts { font-size: .75rem; color: var(--muted); margin: 0 0 0 10px; direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+.live-box .mark { background: var(--gold-soft); border-radius: 6px; padding: 1px 8px; }
+.quote { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; max-height: 140px; overflow: hidden; white-space: pre-line; color: var(--muted); }
 .toast-host { position: fixed; inset-inline: 0; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: grid; justify-items: center; gap: 8px; pointer-events: none; padding-inline: 16px; }
 .toast { background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 500; max-width: 520px; pointer-events: auto; }
 .toast.bad { background: var(--bad); color: #fff; }
@@ -169,11 +179,13 @@ details > summary { cursor: pointer; font-weight: 600; }
   .nav a { flex-direction: column; gap: 0; font-size: .72rem; padding: 4px 8px; }
   .brand small { display: none; }
   .toast-host { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  .recbar { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); inset-inline-start: 12px; padding: 8px 14px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
-<div id="app"><div class="wrap" style="padding-block:40px"><p class="muted">טוען את הממלכה…</p></div></div>
+<script>document.documentElement.lang = "he"; document.documentElement.dir = "rtl";</script>
+<div id="app" dir="rtl"><div class="wrap" style="padding-block:40px"><p class="muted">טוען את הממלכה…</p></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
@@ -267,6 +279,7 @@ const P = {
   search: "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM21 21l-4.5-4.5",
   gear: "M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1",
   plus: "M12 5v14M5 12h14",
+  mic: "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3",
   upload: "M12 16V4M7 9l5-5 5 5M4 20h16",
   drive: "M8 3h8l6 10-4 7H6l-4-7zM8 3l6 10M16 3l-6 10M2 13h20",
   doc: "M6 3h8l5 5v13H6zM14 3v5h5M9 13h7M9 17h7",
@@ -1036,6 +1049,315 @@ function useRoute() {
 const go = (h) => { location.hash = h; };
 
 /* =====================================================================
+   Recording. Claude pages can't open the microphone, so the live recorder (recorder.html,
+   published next to this page) runs in its own small window. It streams the live transcript
+   here over postMessage, takes pause / star / note / stop from here, and hands the full text
+   over at the end. While recording, the transcript is backed up to the cloud every few minutes.
+   Fallbacks: "העתק לממלכה" + Ctrl+V anywhere on the site, or a TXT file carrying REC_MARK.
+   ===================================================================== */
+const REC_MARK = "[הממלכה של גל · תמלול]";
+const REC_FILE = "recorder.html";
+const BACKUP_EVERY = 4 * 60 * 1000;
+const hms = (sec) => { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`; };
+
+/** Recorder export → { title, date, seconds, text }, or null if it isn't one. */
+function parseRecording(raw) {
+  const t = String(raw || "").replace(/\r\n?/g, "\n").replace(/^[\s‎‏﻿]+/, "");
+  if (!t.startsWith(REC_MARK)) return null;
+  const rest = t.slice(REC_MARK.length).replace(/^[ \t]*\n/, "");
+  const cut = rest.indexOf("\n\n");
+  const head = cut < 0 ? rest : rest.slice(0, cut);
+  const text = cut < 0 ? "" : rest.slice(cut + 2).trim();
+  const field = (k) => (head.match(new RegExp(`^${k}:[ \\t]*(.*)$`, "m")) || [])[1]?.trim() || "";
+  const dur = field("משך").split(":").map(Number);
+  const seconds = dur.every(Number.isFinite) ? dur.reduce((a, b) => a * 60 + b, 0) : 0;
+  return { title: field("שם השיעור"), date: field("תאריך"), seconds, text };
+}
+
+const lastCourse = () => { try { return localStorage.getItem("kingdom-last-course") || ""; } catch { return ""; } };
+const rememberCourse = (id) => { try { id && localStorage.setItem("kingdom-last-course", id); } catch {} };
+
+/** Save a transcript as a new lesson. Returns { id, lesson }. */
+async function createLesson({ course, title, text, source, minutes }) {
+  const id = newId();
+  const body = text.trim();
+  const n = await saveText("transcripts", id, body);
+  const lesson = { courseId: course.id, title, createdAt: Date.now(), source, textParts: n, chars: body.length, minutes: minutes || speechMinutes(body.length), status: "new" };
+  await put("lessons", id, lesson);
+  return { id, lesson };
+}
+
+/* Shared recording state (one recorder window per page). */
+const recHub = {
+  s: { win: null, ready: false, opened: 0, blocked: false, severed: false, courseId: "", wantTitle: "", wantStart: false, live: null, incoming: null, draft: null, lastBackup: 0 },
+  subs: new Set(),
+  set(p) { this.s = { ...this.s, ...p }; this.subs.forEach((f) => f(this.s)); },
+};
+function useRecHub() {
+  const [s, setS] = useState(recHub.s);
+  useEffect(() => { recHub.subs.add(setS); setS(recHub.s); return () => { recHub.subs.delete(setS); }; }, []);
+  return s;
+}
+function recPost(msg) { try { recHub.s.win?.postMessage({ kr: 1, ...msg }, "*"); } catch {} }
+const recLive = (s = recHub.s) => !!s.live && (s.live.status === "rec" || s.live.status === "paused");
+
+let draftWrite = Promise.resolve();
+function saveDraft(text, p) {
+  draftWrite = draftWrite.catch(() => {}).then(async () => {
+    const parts = await saveRaw("recdrafts", "current", text);
+    const meta = { parts, title: p.title || "", seconds: p.seconds || 0, chars: p.text.length, savedAt: Date.now(), courseId: recHub.s.courseId || "" };
+    await put("recdrafts", "meta", meta);
+    recHub.set({ draft: meta });
+  });
+  return draftWrite;
+}
+async function dropDraft() {
+  await draftWrite.catch(() => {});
+  await deleteText("recdrafts", "current");
+  await del("recdrafts", "meta").catch(() => {});
+  recHub.set({ draft: null });
+}
+async function importDraft() {
+  const m = recHub.s.draft; if (!m) return;
+  const p = parseRecording(await loadRaw("recdrafts", "current", m.parts));
+  if (!p) throw new Error("הגיבוי פגום ולא ניתן לקרוא אותו.");
+  recHub.set({ incoming: { ...p, courseId: m.courseId || recHub.s.courseId || "", fromDraft: true } });
+}
+
+addEventListener("message", (e) => {
+  const d = e.data;
+  if (!d || d.kr !== 1 || typeof d.type !== "string" || !e.source || e.source === window) return;
+  const s = recHub.s;
+  if (e.source !== s.win) {
+    // A recorder opened from this page before it reloaded: adopt it.
+    if (d.type !== "ready" && d.type !== "tick") return;
+    recHub.set({ win: e.source, ready: true });
+    if (d.type === "tick") recPost({ type: "hello" });
+  }
+  if (d.type === "ready") {
+    recHub.set({ ready: true, opened: 0 });
+    recPost({ type: "hello", title: recHub.s.wantTitle, start: recHub.s.wantStart });
+    recHub.set({ wantStart: false });
+  } else if (d.type === "tick") {
+    const prev = recHub.s.live;
+    const base = Math.max(0, Math.floor(+d.base || 0));
+    const have = prev?.lines || [];
+    if (base > have.length) { recPost({ type: "hello" }); return; } // missed an update: ask for everything again
+    const incomingLines = (Array.isArray(d.lines) ? d.lines : []).map((l) => ({ t: +l.t || 0, text: String(l.text || ""), kind: String(l.kind || "speech") }));
+    const live = { status: String(d.status), seconds: +d.seconds || 0, words: +d.words || 0, title: String(d.title || ""), interim: String(d.interim || ""), restore: !!d.restore, saved: !!d.saved, error: String(d.error || ""), speech: d.speech !== false, at: Date.now(), lines: [...have.slice(0, base), ...incomingLines] };
+    const patchHub = { live };
+    if (live.status === "rec") {
+      if (!recHub.s.lastBackup) patchHub.lastBackup = Date.now();
+      else if (Date.now() - recHub.s.lastBackup > BACKUP_EVERY) { patchHub.lastBackup = Date.now(); recPost({ type: "pull", reason: "backup" }); }
+    }
+    if (live.status === "idle") patchHub.lastBackup = 0;
+    recHub.set(patchHub);
+  } else if (d.type === "full" && typeof d.text === "string") {
+    const p = parseRecording(d.text); if (!p || !p.text) return;
+    saveDraft(d.text, p).catch(() => {});
+    if (d.reason !== "backup") recHub.set({ incoming: { ...p, courseId: recHub.s.courseId || "", fromRecorder: true } });
+  } else if (d.type === "closed") {
+    const wasLive = recLive();
+    recHub.set({ win: null, ready: false, live: null });
+    if (wasLive) pushToast("חלון המקליט נסגר באמצע ההקלטה. התמלול נשמר כגיבוי, ואפשר לפתוח את המקליט שוב ולהמשיך.", "bad");
+  }
+});
+
+function openRecorder({ courseId, title, start }) {
+  recHub.set({ courseId: courseId || "", wantTitle: title || "", wantStart: !!start, blocked: false, severed: false });
+  rememberCourse(courseId);
+  const s = recHub.s;
+  if (s.win && !s.win.closed) {
+    try { s.win.focus(); } catch {}
+    if (s.ready) { recPost({ type: "hello", title, start }); recHub.set({ wantStart: false }); }
+    return;
+  }
+  let w = null;
+  try { w = window.open(REC_FILE, "kingdom-recorder", "popup=yes,width=1040,height=820"); } catch {}
+  if (!w) { recHub.set({ blocked: true }); return; }
+  recHub.set({ win: w, ready: false, opened: Date.now(), live: null });
+}
+async function downloadRecorder() {
+  const r = await fetch(REC_FILE); if (!r.ok) throw new Error("לא הצלחתי לטעון את המקליט.");
+  return saveFile("מקליט הממלכה.html", await r.text());
+}
+
+/** Lives in App: paste detection, the import dialog, the floating "recording" pill, window watch. */
+function RecordingHub({ store, route }) {
+  const hub = useRecHub();
+  const routeCourse = route.startsWith("c-") ? route.slice(2) : route.startsWith("l-") ? store.lessons.find((l) => l.id === route.slice(2))?.courseId || "" : route.startsWith("rec-") ? route.slice(4) : "";
+  useEffect(() => {
+    const onPaste = (e) => {
+      const p = parseRecording(e.clipboardData?.getData("text/plain"));
+      if (!p) return;
+      e.preventDefault(); e.stopPropagation();
+      if (!p.text) return pushToast("התמלול שהודבק ריק.", "bad");
+      recHub.set({ incoming: { ...p, courseId: "" } });
+    };
+    document.addEventListener("paste", onPaste, true);
+    const t = setInterval(() => {
+      const s = recHub.s;
+      if (!s.win || !s.win.closed) return;
+      // Closed before it ever said hello: the browser cut the link to this page (it still records on its own).
+      if (!s.ready && s.opened && Date.now() - s.opened < 8000) return recHub.set({ win: null, opened: 0, severed: true });
+      const wasLive = recLive(s);
+      recHub.set({ win: null, ready: false, live: null, opened: 0 });
+      if (wasLive) pushToast("חלון המקליט נסגר. התמלול נשמר כגיבוי, ואפשר לפתוח את המקליט שוב ולהמשיך.", "bad");
+    }, 2000);
+    return () => { document.removeEventListener("paste", onPaste, true); clearInterval(t); };
+  }, []);
+  useEffect(() => {
+    if (!store.loaded) return;
+    col("recdrafts").doc("meta").get().then((sn) => { if (sn.exists) recHub.set({ draft: sn.data() }); }).catch(() => {});
+  }, [store.loaded]);
+  const live = hub.live;
+  const onRecPage = route === "rec" || route.startsWith("rec-");
+  return html`
+    ${live && !onRecPage && (recLive(hub) || (live.status === "done" && !live.saved && live.words > 0)) && html`
+      <a class="recbar" href=${"#rec" + (hub.courseId ? "-" + hub.courseId : "")}>
+        ${recLive(hub) ? html`<span class=${"recdot" + (live.status === "paused" ? " off" : "")}></span><span>${live.status === "paused" ? "מושהה" : "מקליט"}</span><b class="ltr">${hms(live.seconds)}</b><span class="tiny">${live.words.toLocaleString("he-IL")} מילים</span>` : html`<${Icon} n="check" /><span>ההקלטה הסתיימה: לשמירה בקורס</span>`}
+      </a>`}
+    ${hub.incoming && store.loaded && html`<${ImportRecording} key=${hub.incoming.text.length + hub.incoming.title} store=${store} incoming=${hub.incoming} fallbackCourseId=${routeCourse} onClose=${(saved) => { if (!saved && (hub.incoming.fromRecorder || hub.incoming.fromDraft) && recHub.s.draft) pushToast("התמלול שמור כגיבוי. אפשר לשמור אותו מאוחר יותר בדף ״הקלטה״."); recHub.set({ incoming: null }); }} />`}`;
+}
+
+function CourseSelect({ id, courses, value, onChange, allowNew }) {
+  return html`<select id=${id} class="select" value=${value} onChange=${(e) => onChange(e.target.value)}>
+    ${courses.map((c) => html`<option value=${c.id}>${c.name}</option>`)}
+    ${allowNew && html`<option value="__new">+ קורס חדש</option>`}
+  </select>`;
+}
+
+/** "Which course is this recording for?" — then save (and summarize). */
+function ImportRecording({ store, incoming, fallbackCourseId, onClose }) {
+  const courses = [...store.courses].sort((a, b) => a.createdAt - b.createdAt);
+  const pick = [incoming.courseId, fallbackCourseId, lastCourse()].find((id) => id && courses.some((c) => c.id === id)) || courses[courses.length - 1]?.id || "__new";
+  const [cid, setCid] = useState(pick);
+  const [newName, setNewName] = useState("");
+  const generic = !incoming.title || incoming.title === "שיעור";
+  const [title, setTitle] = useState(generic ? "" : incoming.title);
+  const [busy, setBusy] = useState(false);
+  const count = store.lessons.filter((l) => l.courseId === cid).length;
+  const text = incoming.text || "";
+  async function save(auto) {
+    if (cid === "__new" && !newName.trim()) return pushToast("כתוב שם לקורס החדש", "bad");
+    setBusy(true);
+    try {
+      let course = courses.find((c) => c.id === cid);
+      if (!course) {
+        const id = newId(); const data = { name: newName.trim(), vocabulary: "", color: COLORS[courses.length % COLORS.length], examDate: null, createdAt: Date.now() };
+        await put("courses", id, data); course = { id, ...data };
+      }
+      const n = store.lessons.filter((l) => l.courseId === course.id).length;
+      const { id, lesson } = await createLesson({ course, title: title.trim() || `שיעור ${n + 1}`, text, source: "recorder", minutes: incoming.seconds ? Math.max(1, Math.round(incoming.seconds / 60)) : 0 });
+      rememberCourse(course.id);
+      if (incoming.fromRecorder) recPost({ type: "saved" });
+      if (incoming.fromRecorder || incoming.fromDraft) dropDraft().catch(() => {});
+      onClose(true); go("l-" + id);
+      pushToast(`נשמר בקורס "${course.name}"`, "good");
+      if (auto) processLesson({ id, ...lesson }, course, pushToast);
+    } catch (e) { pushToast("השמירה נכשלה: " + (e.message || e.code), "bad"); setBusy(false); }
+  }
+  return html`<${Modal} title="שמירת ההקלטה בקורס" onClose=${() => onClose(false)}>
+    <div class="row" style="gap:8px">${incoming.seconds > 0 && html`<span class="chip">משך ${hms(incoming.seconds)}</span>`}<span class="chip">${words(text).toLocaleString("he-IL")} מילים</span>${incoming.date && html`<span class="chip">${incoming.date}</span>`}</div>
+    <div class="grid2" style="gap:12px">
+      <div><label class="lbl" for="ir-course">קורס</label>${courses.length ? html`<${CourseSelect} id="ir-course" courses=${courses} value=${cid} onChange=${setCid} allowNew />` : html`<input id="ir-course" class="input" value="קורס חדש" disabled />`}</div>
+      <div><label class="lbl" for="ir-title">שם השיעור</label><input id="ir-title" class="input" value=${title} placeholder=${`שיעור ${count + 1}`} onInput=${(e) => setTitle(e.target.value)} /></div>
+    </div>
+    ${cid === "__new" && html`<div><label class="lbl" for="ir-new">שם הקורס החדש</label><input id="ir-new" class="input" value=${newName} onInput=${(e) => setNewName(e.target.value)} placeholder="לדוגמה: מבוא לכלכלה" autofocus /></div>`}
+    <div><span class="lbl">תחילת התמלול</span><div class="quote small" dir=${dirOf(text)}>${text.slice(0, 420)}${text.length > 420 ? "…" : ""}</div></div>
+    <div class="row"><button class="btn primary" disabled=${busy || !text.trim()} onClick=${() => save(true)}><${Icon} n="spark" />שמור וסכם</button><button class="btn ghost" disabled=${busy || !text.trim()} onClick=${() => save(false)}>רק לשמור</button></div>
+  <//>`;
+}
+
+/** The recording page: choose course → record → live transcript + controls → saved into the course. */
+function RecordPage({ store, courseId }) {
+  const hub = useRecHub();
+  const courses = [...store.courses].sort((a, b) => a.createdAt - b.createdAt);
+  const valid = (id) => id && courses.some((c) => c.id === id);
+  const [cid, setCid] = useState("");
+  const [title, setTitle] = useState("");
+  const [noteText, setNoteText] = useState("");
+  const [busy, setBusy] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [ask, setAsk] = useState(null);
+  const [, tick] = useState(0);
+  useEffect(() => { const t = setInterval(() => tick((x) => x + 1), 5000); return () => clearInterval(t); }, []);
+  const boxRef = useRef();
+  const chosen = [cid, courseId, hub.courseId, lastCourse()].find(valid) || courses[courses.length - 1]?.id || "";
+  const course = courses.find((c) => c.id === chosen);
+  const live = hub.live;
+  const recording = recLive(hub);
+  const lines = live?.lines || [];
+  const shown = showAll ? lines : lines.slice(-200);
+  useEffect(() => { const b = boxRef.current; if (b && b.scrollHeight - b.scrollTop - b.clientHeight < 200) b.scrollTop = b.scrollHeight; }, [lines.length, live?.interim, lines[lines.length - 1]?.text]);
+  if (!store.loaded) return html`<${Busy} label="טוען…" />`;
+  const nextTitle = course ? `שיעור ${store.lessons.filter((l) => l.courseId === course.id).length + 1}` : "שיעור";
+  const start = () => openRecorder({ courseId: chosen, title: title.trim() || nextTitle, start: true });
+  const cmd = (c, extra = {}) => recPost({ type: "cmd", cmd: c, ...extra });
+  const stale = recording && Date.now() - live.at > 60000;
+  const linkSlow = !!(hub.severed || (hub.opened && !hub.ready && Date.now() - hub.opened > 6000));
+  const showLive = recording || (live?.status === "done" && !live.saved && lines.length > 0);
+  const draftNotice = hub.draft && !recording && html`<div class="notice row between"><span>נמצא גיבוי של הקלטה שעוד לא נשמרה כשיעור${hub.draft.title ? html`: <b>${hub.draft.title}</b>` : ""} (${hub.draft.seconds ? hms(hub.draft.seconds) + ", " : ""}${fmtDate(hub.draft.savedAt)}).</span>
+    <span class="row"><button class="btn primary sm" disabled=${!!busy} onClick=${async () => { setBusy("draft"); try { await importDraft(); } catch (e) { pushToast(e.message, "bad"); } finally { setBusy(""); } }}>שמירה בקורס</button><button class="btn ghost sm" onClick=${() => setAsk("drop")}>מחיקה</button></span></div>`;
+
+  return html`
+    <section class="stack" style="gap:4px"><h1>הקלטת שיעור</h1><p class="muted">מקליטים את השיעור, התמלול מופיע כאן בזמן אמת, ובסוף הוא נשמר בקורס ו-Claude מסכם אותו.</p></section>
+    ${draftNotice}
+    ${ask === "drop" && html`<${Confirm} title="מחיקת הגיבוי" text="הגיבוי של ההקלטה יימחק לצמיתות." action="מחיקה" onYes=${() => dropDraft()} onClose=${() => setAsk(null)} />`}
+    ${ask === "stop" && html`<${Confirm} title="סיום השיעור" text="ההקלטה תיעצר, ואז בוחרים קורס ושומרים את התמלול." action="סיום ושמירה" danger=${false} onYes=${() => cmd("stop")} onClose=${() => setAsk(null)} />`}
+    ${showLive ? html`
+      <section class="card stack rec-live">
+        <div class="row between">
+          <div class="row" style="gap:10px">${recording ? html`<span class=${"recdot" + (live.status === "paused" ? " off" : "")}></span><b>${live.status === "paused" ? "ההקלטה מושהית" : "מקליט ומתמלל"}</b>` : html`<span class="chip good">ההקלטה הסתיימה</span>`}
+            <span class="muted small">${course ? course.name + " · " : ""}${live.title || nextTitle}</span></div>
+          <div class="row" style="gap:14px"><span class="rec-clock">${hms(live.seconds)}</span><span class="muted small">${live.words.toLocaleString("he-IL")} מילים</span></div>
+        </div>
+        ${recording && html`<div class="row">
+          <button class="btn ghost" onClick=${() => cmd(live.status === "paused" ? "resume" : "pause")}>${live.status === "paused" ? "המשך הקלטה" : "השהיה (הפסקה)"}</button>
+          <button class="btn ghost" onClick=${() => { cmd("star"); pushToast("סומן כרגע חשוב ⭐"); }} title="מסמן את הרגע הזה בתמלול">⭐ רגע חשוב</button>
+          <button class="btn primary" onClick=${() => setAsk("stop")}><span style="width:12px;height:12px;border-radius:3px;background:currentColor;display:inline-block"></span>סיום השיעור</button>
+        </div>
+        <form class="row" onSubmit=${(e) => { e.preventDefault(); if (noteText.trim()) { cmd("note", { text: noteText.trim() }); setNoteText(""); } }}><input class="input grow" style="min-width:0" value=${noteText} onInput=${(e) => setNoteText(e.target.value)} placeholder="פתק עם חותמת זמן (למשל: ״זה יהיה במבחן״)" aria-label="פתק" /><button class="btn ghost">הוספה</button></form>`}
+        ${live.error && html`<div class="notice bad small">${live.error}</div>`}
+        ${recording && !live.speech && html`<div class="notice small">הדפדפן של חלון המקליט לא תומך בתמלול חי. ההקלטה הקולית נשמרת בחלון. לתמלול חי פתח את הממלכה ב-Chrome או ב-Edge.</div>`}
+        ${stale && html`<div class="notice small">לא הגיע עדכון מהמקליט כבר יותר מדקה. ודא שחלון המקליט פתוח ולא ממוזער.</div>`}
+        <div class="live-box" ref=${boxRef} aria-live="polite">
+          ${lines.length > shown.length && html`<button class="btn quiet sm" onClick=${() => setShowAll(true)}>הצגת כל התמלול (${lines.length} קטעים)</button>`}
+          ${shown.map((l) => html`<p><span class="ts">${hms(l.t)}</span><span class=${l.kind === "speech" ? "" : "mark"} dir=${dirOf(l.text)}>${l.text}</span></p>`)}
+          ${live.interim && html`<p class="muted">${live.interim}</p>`}
+          ${!lines.length && !live.interim && html`<p class="muted">${live.status === "done" ? "לא נקלט תמלול." : "מקשיב… התמלול יופיע כאן ברגע שהמרצה מדבר."}</p>`}
+        </div>
+        ${recording ? html`<p class="hint">השאר את חלון המקליט פתוח (אפשר להזיז אותו הצידה, לא למזער). אפשר לעבור לדפים אחרים באתר בזמן ההקלטה. התמלול מגובה לענן כל כמה דקות.</p>`
+          : html`<div class="row"><button class="btn gold" onClick=${() => recPost({ type: "pull", reason: "send" })}><${Icon} n="check" />שמירה בקורס</button></div>`}
+      </section>`
+    : html`
+      <section class="card stack">
+        ${live?.restore && html`<div class="notice">בחלון המקליט נמצאה הקלטה קודמת שלא הועברה. עבור לחלון המקליט ובחר אם להמשיך אותה או להעביר אותה לכאן.</div>`}
+        <div class="grid2" style="gap:12px">
+          <div><label class="lbl" for="rp-course">קורס</label>${courses.length ? html`<${CourseSelect} id="rp-course" courses=${courses} value=${chosen} onChange=${setCid} />` : html`<p class="small muted">אפשר להקליט עכשיו ולבחור או ליצור קורס בסוף.</p>`}</div>
+          <div><label class="lbl" for="rp-title">שם השיעור</label><input id="rp-title" class="input" value=${title} placeholder=${nextTitle} onInput=${(e) => setTitle(e.target.value)} /></div>
+        </div>
+        <div><button class="btn gold lg" onClick=${start}><${Icon} n="mic" />התחלת הקלטה</button></div>
+        <p class="hint">ההקלטה רצה בחלון קטן של הממלכה שנפתח לצד הדף, כי Claude לא מאפשר לדפים שלו להשתמש במיקרופון ישירות. התמלול החי והשליטה בהקלטה נשארים כאן. בפעם הראשונה הדפדפן יבקש אישור למיקרופון. הכי טוב ב-Chrome או ב-Edge במחשב.</p>
+        ${hub.blocked && html`<div class="notice bad small">הדפדפן לא אפשר לפתוח את חלון המקליט. <a href=${REC_FILE} target="_blank">פתח את המקליט בלשונית חדשה</a>, או הורד אותו למחשב (למטה). בסוף השיעור לוחצים בו ״העתק לממלכה״ ומדביקים כאן (Ctrl+V).</div>`}
+        ${linkSlow && html`<div class="notice small">חלון המקליט נפתח, אבל הוא לא מחובר לדף הזה. אפשר להקליט בו כרגיל: בסוף השיעור לוחצים בו ״העתק לממלכה״, חוזרים לכאן ולוחצים Ctrl+V. אם החלון ריק או שהמיקרופון חסום בו, הורד את המקליט למחשב (למטה).</div>`}
+        ${live?.error && html`<div class="notice bad small">${live.error}</div>`}
+      </section>
+      <section class="grid2">
+        <div class="card stack">
+          <h3>המיקרופון חסום בחלון? מקליט במחשב</h3>
+          <p class="small muted">מורידים את המקליט פעם אחת, פותחים את הקובץ ב-Chrome ומקליטים. בסוף השיעור לוחצים ״העתק לממלכה״, ואז Ctrl+V בכל מקום באתר.</p>
+          <div><button class="btn ghost" disabled=${busy === "dl"} onClick=${async () => { setBusy("dl"); try { if (await downloadRecorder()) pushToast("המקליט ירד למחשב. פתח אותו ב-Chrome.", "good"); } catch (e) { pushToast(e.message, "bad"); } finally { setBusy(""); } }}><${Icon} n="upload" />הורדת המקליט למחשב</button></div>
+        </div>
+        <div class="card stack">
+          <h3>יש לך כבר תמלול?</h3>
+          <p class="small muted">לחץ בתיבה והדבק (Ctrl+V) תמלול מהמקליט, מהקלדה קולית בגוגל דוקס או מכל מקום אחר.</p>
+          <textarea class="textarea" style="min-height:70px" placeholder="הדבק כאן…" aria-label="הדבקת תמלול" onPaste=${(e) => { const t = e.clipboardData?.getData("text/plain") || ""; if (t.trim() && !parseRecording(t)) { e.preventDefault(); recHub.set({ incoming: { title: "", seconds: 0, date: "", text: t.trim(), courseId: chosen } }); } }}></textarea>
+        </div>
+      </section>`}`;
+}
+
+/* =====================================================================
    App
    ===================================================================== */
 function App() {
@@ -1052,6 +1374,7 @@ function App() {
   else if (route === "search") view = html`<${SearchView} store=${store} />`;
   else if (route === "help") view = html`<${HelpView} />`;
   else if (route === "prefs") view = html`<${PrefsView} store=${store} />`;
+  else if (route === "rec" || route.startsWith("rec-")) view = html`<${RecordPage} store=${store} courseId=${route.slice(4)} />`;
   else view = html`<${Home} store=${store} />`;
   const due = store.cards.filter(isDue).length;
   const cur = route.split("-")[0];
@@ -1060,6 +1383,7 @@ function App() {
       <a class="brand" href="#"><span class="brand-mark"><${Icon} n="crown" s=${20} /></span><span><b>הממלכה של גל</b><small class="muted tiny" style="display:block;margin-top:-4px">סיכומים · תרגול · מבחנים</small></span></a>
       <nav class="nav" aria-label="ניווט">
         <a href="#" aria-current=${!route || cur === "c" || cur === "l" ? "page" : undefined}><${Icon} n="home" />בית</a>
+        <a href="#rec" aria-current=${cur === "rec" ? "page" : undefined}><${Icon} n="mic" />הקלטה</a>
         <a href="#review" aria-current=${route === "review" ? "page" : undefined}><${Icon} n="cards" />חזרה${due ? ` (${due})` : ""}</a>
         <a href="#search" aria-current=${route === "search" ? "page" : undefined}><${Icon} n="search" />חיפוש</a>
         <a href="#help" aria-current=${route === "help" ? "page" : undefined}><${Icon} n="help" />מדריך</a>
@@ -1071,6 +1395,7 @@ function App() {
       ${store.slow && !store.loaded && html`<div class="notice">הנתונים עדיין נטענים. אם זה נמשך, בדוק את החיבור לאינטרנט.</div>`}
       ${view}
     </main>
+    <${RecordingHub} store=${store} route=${route} />
     <${Toasts} />`;
 }
 
@@ -1095,7 +1420,7 @@ function Home({ store }) {
   return html`
     <section class="row between" style="align-items:end">
       <div><p class="muted">${greeting()},</p><h1>${caps.name || "ברוכים הבאים"}</h1></div>
-      <div class="row"><button class="btn ghost" onClick=${() => setForm(true)}><${Icon} n="plus" />קורס חדש</button></div>
+      <div class="row"><a class="btn gold" href="#rec"><${Icon} n="mic" />הקלטת שיעור</a><button class="btn ghost" onClick=${() => setForm(true)}><${Icon} n="plus" />קורס חדש</button></div>
     </section>
     ${!courses.length ? html`
       <div class="card stack" style="padding:28px">
@@ -1103,7 +1428,7 @@ function Home({ store }) {
         <p class="muted">כאן כל שיעור הופך למחברת: סיכום מלא לפי נושאים, מבחן אמריקאי, שאלות פתוחות עם בדיקה, כרטיסיות לחזרה, ומחברת קורס שאפשר להוריד ל-Word. הכל רץ בתוך Claude, בלי שרתים ובלי תשלום נוסף.</p>
         <ol class="steps">
           <li><span><b>יוצרים קורס</b> (למשל "מבוא לכלכלה").</span></li>
-          <li><span><b>מוסיפים שיעור:</b> מייבאים תמלול מגוגל דרייב, מעלים קובץ, או מדביקים טקסט. <a href="#help">איך מתמללים שיעור בחינם?</a></span></li>
+          <li><span><b>מקליטים שיעור</b> בכפתור <a href="#rec">הקלטה</a>, והתמלול מופיע בזמן אמת. אפשר גם לייבא תמלול מגוגל דרייב, להעלות קובץ או להדביק טקסט.</span></li>
           <li><span><b>לוחצים "סכם"</b> ומקבלים סיכום, מבחן, כרטיסיות ושאלות פתוחות.</span></li>
         </ol>
         <div><button class="btn gold lg" onClick=${() => setForm(true)}>יצירת קורס ראשון</button></div>
@@ -1168,7 +1493,7 @@ function CourseView({ id, store }) {
     <header class="card course-card" style="padding:22px 24px"><span class="stripe" style=${{ background: c.color, width: "8px" }}></span>
       <div class="row between"><div class="stack" style="gap:6px"><span class="small muted">קורס</span><h1>${c.name}</h1>
         <div class="row" style="gap:6px">${d !== null && d >= 0 && html`<span class="chip gold">מבחן בעוד ${d} ימים</span>`}${due > 0 && html`<span class="chip">${due} כרטיסיות לחזרה</span>`}<span class="chip">${lessons.length} שיעורים</span></div></div>
-        <${AddLessonButton} course=${c} lessons=${lessons} /></div>
+        <div class="row"><a class="btn gold" href=${"#rec-" + c.id}><${Icon} n="mic" />הקלטה</a><${AddLessonButton} course=${c} lessons=${lessons} /></div></div>
     </header>
     <${Tabs} value=${tab} onChange=${setT} tabs=${[["lessons", "שיעורים"], ["notebook", "מחברת"], ["cards", `כרטיסיות${due ? ` (${due})` : ""}`], ["exams", "מבחנים ותרגול"], ["past", "מבחנים קודמים"], ["chat", "שאל את הקורס"], ["plan", "תוכנית לימוד"], ["edit", "הגדרות"]]} />
     ${tab === "lessons" && html`<${CourseLessons} ...${ctx} />`}
@@ -1201,25 +1526,30 @@ function AddLesson({ course, lessons, onClose }) {
   const [stage, setStage] = useState("");
   const [busy, setBusy] = useState(false);
   const [origin, setOrigin] = useState("");
+  const [recSecs, setRecSecs] = useState(0);
+  const useText = (t, name) => { // a recorder export carries its own title and length
+    const r = parseRecording(t);
+    if (r) { setText(r.text); setRecSecs(r.seconds); if (r.title && r.title !== "שיעור") return setTitle(r.title); }
+    else { setText(t); setRecSecs(0); }
+    if (name && /^שיעור \d+$/.test(title)) setTitle(name.replace(/\.[^.]+$/, ""));
+  };
 
   async function create(autoSummarize) {
     if (!text.trim()) return pushToast("אין עדיין טקסט לשיעור", "bad");
     setBusy(true); setStage("שומר…");
     try {
-      const id = newId();
-      const n = await saveText("transcripts", id, text.trim());
-      const lesson = { courseId: course.id, title: title.trim() || `שיעור ${lessons.length + 1}`, createdAt: Date.now(), source: origin || src, textParts: n, chars: text.length, minutes: speechMinutes(text.length), status: "new" };
-      await put("lessons", id, lesson);
+      const { id, lesson } = await createLesson({ course, title: title.trim() || `שיעור ${lessons.length + 1}`, text, source: origin || src, minutes: recSecs ? Math.max(1, Math.round(recSecs / 60)) : 0 });
       onClose(); go("l-" + id);
       if (autoSummarize) processLesson({ id, ...lesson }, course, pushToast);
     } catch (e) { pushToast("השמירה נכשלה: " + (e.message || e.code), "bad"); setBusy(false); setStage(""); }
   }
 
   return html`<${Modal} title="שיעור חדש" onClose=${onClose}>
+    <a class="opt" href=${"#rec-" + course.id} style="text-decoration:none"><${Icon} n="mic" /><span class="grow"><b>להקליט את השיעור עכשיו</b><span class="small muted" style="display:block">תמלול חי בזמן השיעור, ובסוף סיכום אוטומטי</span></span></a>
     <div><label class="lbl" for="al-title">שם השיעור</label><input id="al-title" class="input" value=${title} onInput=${(e) => setTitle(e.target.value)} /><p class="hint">בסוף הסיכום Claude יציע שם לפי התוכן.</p></div>
     <${Tabs} value=${src} onChange=${(v) => { setSrc(v); }} tabs=${[["drive", "מגוגל דרייב"], ["file", "קובץ מהמחשב"], ["paste", "הדבקה"]]} />
-    ${src === "drive" && html`<${DrivePicker} kind="transcript" onPick=${async (f) => { setStage("קורא את הקובץ מהדרייב…"); try { const r = await drive("read_file_content", { fileId: f.id }); const t = resultText(r); setText(t); setOrigin("drive"); if (/^שיעור \d+$/.test(title)) setTitle(f.title.replace(/\.[^.]+$/, "")); setStage(""); } catch (e) { setStage(""); pushToast(e.message, "bad"); } }} />`}
-    ${src === "file" && html`<${FileDrop} accept=".txt,.md,.vtt,.srt,.docx,.pdf,image/*" label="גרור לכאן קובץ תמלול, או לחץ לבחירה" hint="TXT, Word, PDF, תמונה, או כתוביות VTT / SRT (למשל מזום, טימס או יוטיוב)" onFile=${async (f) => { try { const t = await fileToText(f, setStage); setText(t); setOrigin("file"); if (/^שיעור \d+$/.test(title)) setTitle(f.name.replace(/\.[^.]+$/, "")); setStage(""); } catch (e) { setStage(""); pushToast(e.message, "bad"); } }} />`}
+    ${src === "drive" && html`<${DrivePicker} kind="transcript" onPick=${async (f) => { setStage("קורא את הקובץ מהדרייב…"); try { const r = await drive("read_file_content", { fileId: f.id }); useText(resultText(r), f.title); setOrigin("drive"); setStage(""); } catch (e) { setStage(""); pushToast(e.message, "bad"); } }} />`}
+    ${src === "file" && html`<${FileDrop} accept=".txt,.md,.vtt,.srt,.docx,.pdf,image/*" label="גרור לכאן קובץ תמלול, או לחץ לבחירה" hint="TXT, Word, PDF, תמונה, או כתוביות VTT / SRT (למשל מזום, טימס או יוטיוב)" onFile=${async (f) => { try { const t = await fileToText(f, setStage); useText(t, f.name); setOrigin("file"); setStage(""); } catch (e) { setStage(""); pushToast(e.message, "bad"); } }} />`}
     ${src === "paste" && html`<p class="small muted">הדבק את התמלול או את הסיכומים שלך מהשיעור.</p>`}
     ${stage && html`<${Busy} label=${stage} />`}
     <div><label class="lbl" for="al-text">טקסט השיעור ${text && html`<span class="muted small">(${words(text).toLocaleString("he-IL")} מילים, כ-${speechMinutes(text.length)} דק׳ דיבור)</span>`}</label>
@@ -1262,7 +1592,7 @@ function CourseLessons({ c, lessons, attempts }) {
   const best = new Map(); for (const a of attempts) if (a.lessonId && a.kind === "lesson") best.set(a.lessonId, Math.max(best.get(a.lessonId) || 0, a.score));
   const pending = lessons.filter((l) => l.status === "new" || l.status === "error");
   const [batch, setBatch] = useState(false);
-  if (!lessons.length) return html`<${Empty} icon="book" title="עוד אין שיעורים בקורס" text="מוסיפים שיעור מתמלול בגוגל דרייב, מקובץ או מטקסט, ו-Claude מסכם אותו."><a class="small" href="#help">איך מתמללים שיעור בחינם?</a><//>`;
+  if (!lessons.length) return html`<${Empty} icon="book" title="עוד אין שיעורים בקורס" text="מקליטים שיעור עם תמלול חי, או מוסיפים תמלול מגוגל דרייב, מקובץ או מטקסט, ו-Claude מסכם אותו."><a class="btn gold" href=${"#rec-" + c.id}><${Icon} n="mic" />הקלטת שיעור</a><//>`;
   return html`<div class="stack">
     ${pending.length > 1 && html`<div class="notice row between"><span>${pending.length} שיעורים ממתינים לסיכום.</span><button class="btn primary sm" disabled=${batch} onClick=${async () => { setBatch(true); for (const l of pending) await processLesson(l, c, pushToast); setBatch(false); }}>${batch ? "מסכם…" : "סכם את כולם"}</button></div>`}
     ${lessons.map((l, i) => html`<a class="card tight list-item" href=${"#l-" + l.id}><span class="num">${i + 1}</span><span class="grow" style="min-width:0"><b class="truncate" style="display:block">${l.title}</b><span class="tiny muted">${fmtDate(l.createdAt)}${l.minutes ? ` · כ-${l.minutes} דק׳` : ""}${best.has(l.id) ? ` · שיא במבחן ${best.get(l.id)}%` : ""}${l.status === "processing" && l.progress ? ` · ${l.progress}` : ""}</span></span><${StatusChip} s=${l.status} /></a>`)}
@@ -1784,19 +2114,22 @@ function PrefsView({ store }) {
 /* ---------------- Help ---------------- */
 function HelpView() {
   return html`<section class="stack"><h1>מדריך</h1><p class="muted">איך להפיק את המקסימום מהממלכה.</p></section>
-    <div class="card stack"><h2>איך מקליטים ומתמללים שיעור בחינם</h2>
-      <p class="muted">דף בתוך Claude לא יכול להקליט מהמיקרופון. התמלול נעשה בכלי חינמי, ואחר כך מייבאים אותו לכאן בלחיצה.</p>
-      <h3>במחשב: הקלדה קולית בגוגל דוקס (מומלץ, תומך בעברית)</h3>
+    <div class="card stack"><h2>הקלטת שיעור עם תמלול חי</h2>
       <ol class="steps">
-        <li><span>פתח מסמך חדש ב-Google Docs בדפדפן Chrome, ותן לו את שם השיעור.</span></li>
-        <li><span>בתפריט: <b>כלים</b>, ואז <b>הקלדה קולית</b> (או <span class="kbd">Ctrl+Shift+S</span>). בחר <b>עברית</b> ולחץ על המיקרופון.</span></li>
-        <li><span>השאר את הלשונית של המסמך פתוחה ובחזית לאורך השיעור. אם המיקרופון הפסיק (הפך לאפור), לחץ עליו שוב.</span></li>
-        <li><span>בסוף השיעור, כאן באתר: <b>שיעור חדש</b>, ואז <b>מגוגל דרייב</b>, ובחר את המסמך.</span></li>
+        <li><span>לוחצים <a href="#rec">הקלטה</a> (בתפריט, או בדף של הקורס), בוחרים קורס ושם לשיעור, ולוחצים <b>התחלת הקלטה</b>.</span></li>
+        <li><span>נפתח חלון קטן של המקליט. בפעם הראשונה הדפדפן מבקש אישור למיקרופון: מאשרים. משאירים את החלון פתוח לצד הדף (לא ממזערים).</span></li>
+        <li><span>התמלול מופיע בדף ההקלטה בזמן אמת. משם אפשר להשהות בהפסקה, לסמן ⭐ רגע חשוב ולהוסיף פתקים. אין הגבלת זמן, והתמלול מגובה לענן כל כמה דקות.</span></li>
+        <li><span>בסוף לוחצים <b>סיום השיעור</b>, מאשרים את הקורס, ו-Claude מסכם: סיכום, מבחן, כרטיסיות ושאלות פתוחות.</span></li>
       </ol>
-      <h3>בטלפון אנדרואיד: Live Transcribe</h3>
-      <p class="muted">אפליקציה חינמית של גוגל שמתמללת ברציפות, כולל עברית. בסוף השיעור מעתיקים את הטקסט ומדביקים אותו כאן (שיעור חדש, ואז הדבקה), או שומרים אותו כמסמך בדרייב.</p>
-      <h3>שיעור מקוון</h3>
-      <p class="muted">בזום ובטימס אפשר להוריד את התמלול האוטומטי (קובץ VTT או Word) ולהעלות אותו כאן. גם להרצאה מוקלטת ביוטיוב יש תמלול: "הצגת התמליל", מעתיקים ומדביקים.</p>
+      <p class="muted small">למה חלון נפרד? Claude לא מאפשר לדפים שלו להשתמש במיקרופון, אז המקליט רץ לידו ושולח לכאן את התמלול. התמלול עצמו נעשה בחינם על ידי הדפדפן (Chrome או Edge במחשב), וצריך חיבור לאינטרנט.</p>
+      <h3>אם החלון לא נפתח או שהמיקרופון חסום בו</h3>
+      <p class="muted">בדף ההקלטה לוחצים <b>הורדת המקליט למחשב</b> ופותחים את הקובץ ב-Chrome. מקליטים שם, ובסוף לוחצים <b>העתק לממלכה</b>, חוזרים לכאן ולוחצים <span class="kbd">Ctrl+V</span> בכל מקום באתר: הממלכה מזהה את התמלול ומציעה לשמור אותו בקורס.</p>
+      <h3>דרכים נוספות</h3>
+      <ul style="margin:0;padding-inline-start:1.2em" class="muted">
+        <li><b>הקלדה קולית בגוגל דוקס</b> (כלים, ואז הקלדה קולית): בסוף השיעור, שיעור חדש, ואז מגוגל דרייב.</li>
+        <li><b>Live Transcribe</b> באנדרואיד: מעתיקים את הטקסט ומדביקים כאן.</li>
+        <li><b>זום, טימס ויוטיוב:</b> מורידים את התמלול האוטומטי (VTT או Word) ומעלים אותו כאן.</li>
+      </ul>
     </div>
     <div class="card stack"><h2>מה קורה כשלוחצים "סכם"</h2><p class="muted">Claude קורא את התמלול בחלקים (כחצי שעה דיבור בכל חלק), מסכם כל חלק לפי נושאים, ואז בונה סיכום מאוחד, מבחן אמריקאי, כרטיסיות ושאלות פתוחות. בשיעור של 3 שעות זה לוקח כמה דקות. אם משהו נעצר באמצע, "נסה שוב" ממשיך מאותה נקודה.</p></div>
     <div class="card stack"><h2>מבחנים קודמים</h2><p class="muted">בלשונית "מבחנים קודמים" בכל קורס מעלים מבחן (PDF, גם סרוק, Word או צילום). Claude מנתח את המבנה והנושאים, כותב פתרון מודרך, והסימולציות בונות שאלות באותו סגנון.</p></div>

@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>מקליט הממלכה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700&family=Heebo:wght@400;500;600;700&display=swap">
+<style>
+/* One tool, one screen: a recording studio. Big clock + button on one side, the live transcript on the other. */
+:root {
+  --plum: #3d2466; --plum-soft: #efe9f8; --gold: #a87a10; --gold-soft: #f8f0da;
+  --bg: #f6f4f9; --card: #ffffff; --ink: #1f1830; --muted: #6a6280; --line: #e4dfee;
+  --rec: #c81e3a; --rec-soft: #fbe6ea; --good: #16794f; --good-soft: #e5f4ec;
+  --display: "Frank Ruhl Libre", "David", Georgia, serif; --body: "Heebo", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --plum: #b9a2f0; --plum-soft: #2a2140; --gold: #e8c264; --gold-soft: #3a3020;
+  --bg: #121019; --card: #1b1825; --ink: #ece8f5; --muted: #a49db8; --line: #2e2940;
+  --rec: #f36b80; --rec-soft: #3a1c24; --good: #4fd19a; --good-soft: #17322a; color-scheme: dark } }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.7 var(--body); }
+body { padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2 { font-family: var(--display); margin: 0; line-height: 1.3; }
+.wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 16px; }
+header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mark { width: 36px; height: 36px; border-radius: 10px; background: #2c1a4b; color: #e8c264; display: grid; place-items: center; }
+header h1 { font-size: 1.35rem; }
+header a { margin-inline-start: auto; color: var(--plum); font-weight: 600; }
+.chip { background: var(--good-soft); color: var(--good); border-radius: 99px; padding: 2px 12px; font-size: .82rem; font-weight: 600; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+.grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .grid { grid-template-columns: 340px minmax(0, 1fr); } }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.stack { display: grid; gap: 12px; }
+.muted { color: var(--muted); } .small { font-size: .88rem; } .tiny { font-size: .78rem; }
+label { font-weight: 600; font-size: .9rem; display: block; margin-bottom: 4px; }
+.input, .select { width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 9px 12px; min-height: 42px; }
+.input:focus, .select:focus { outline: none; border-color: var(--plum); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 16px; border-radius: 12px; border: 1px solid transparent; font-weight: 600; cursor: pointer; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--plum); color: var(--card); }
+.btn.gold { background: var(--gold); color: #1d1405; }
+.btn.ghost { background: var(--card); border-color: var(--line); }
+.btn.lg { min-height: 54px; font-size: 1.05rem; padding: 10px 22px; }
+.clock { font-size: 3.4rem; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; direction: ltr; letter-spacing: -.02em; }
+.meter { display: flex; gap: 4px; align-items: center; justify-content: center; height: 44px; }
+.meter i { width: 6px; border-radius: 99px; background: var(--line); height: 10%; transition: height .12s; }
+.meter.on i { background: var(--rec); }
+.big { width: 120px; height: 120px; border-radius: 99px; border: 0; background: var(--rec); color: #fff; display: grid; place-items: center; cursor: pointer; margin: 0 auto; box-shadow: 0 8px 24px rgb(200 30 58 / .3); }
+.big:focus-visible, .btn:focus-visible { outline: 3px solid color-mix(in srgb, var(--plum) 50%, transparent); outline-offset: 3px; }
+.big.on { animation: pulse 1.6s ease-out infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgb(200 30 58 / .45); } 100% { box-shadow: 0 0 0 26px rgb(200 30 58 / 0); } }
+.controls { display: flex; gap: 14px; justify-content: center; align-items: center; }
+.round { width: 60px; height: 60px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .85rem; font-weight: 600; }
+.status { text-align: center; font-size: .92rem; color: var(--muted); min-height: 1.6em; }
+.status.warn { color: var(--rec); font-weight: 600; }
+.live { min-height: 50vh; max-height: 68vh; overflow-y: auto; display: grid; gap: 10px; align-content: start; }
+.live p { margin: 0; }
+.ts { font-size: .75rem; color: var(--muted); margin: 0 0 0 10px; direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+.interim { color: var(--muted); }
+.star { background: var(--gold-soft); border-radius: 8px; padding: 2px 8px; }
+.notice { border-radius: 12px; padding: 12px 14px; background: var(--gold-soft); }
+.notice.bad { background: var(--rec-soft); color: var(--rec); }
+.notice.good { background: var(--good-soft); color: var(--good); }
+.toast { position: fixed; inset-inline: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); margin: 0 auto; max-width: 520px; background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: 12px; font-weight: 500; text-align: center; }
+textarea.copy { position: fixed; top: -1000px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mark" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9l4.5 3.5L12 5l4.5 7.5L21 9l-1.8 10.2a1.5 1.5 0 0 1-1.5 1.3H6.3a1.5 1.5 0 0 1-1.5-1.3z"/></svg></span>
+    <h1>מקליט הממלכה</h1>
+    <span id="linked" class="chip" hidden>מחובר לממלכה ✓</span>
+    <a id="kingdom-link" href="https://claude.ai/artifact/3d1RjRBWF92U5EdBC3MrVP" target="_blank" rel="noopener">לממלכה ←</a>
+  </header>
+
+  <div id="unsupported" class="notice bad" hidden>הדפדפן הזה לא תומך בתמלול חי. פתח את המקליט ב-<b>Google Chrome</b> או ב-<b>Microsoft Edge</b> במחשב.</div>
+  <div id="restore" class="notice" hidden></div>
+  <div id="error" class="notice bad" hidden></div>
+
+  <div class="grid">
+    <section class="card stack" aria-label="שליטה בהקלטה">
+      <div><label for="title">שם השיעור</label><input id="title" class="input" placeholder="למשל: מבוא לכלכלה, שיעור 4"></div>
+      <div><label for="lang">שפת השיעור</label><select id="lang" class="select"><option value="he-IL">עברית</option><option value="en-US">English</option><option value="ar-IL">العربية</option><option value="ru-RU">Русский</option></select></div>
+      <div class="clock" id="clock">0:00</div>
+      <div class="meter" id="meter" aria-hidden="true"></div>
+      <button class="big" id="rec" aria-label="התחלת הקלטה"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <div class="controls" id="controls" hidden>
+        <button class="round" id="pause">השהיה</button>
+        <button class="big on" id="stop" aria-label="סיום השיעור" style="width:92px;height:92px"><span style="width:28px;height:28px;border-radius:6px;background:#fff;display:block"></span></button>
+        <button class="round" id="star" title="סימון רגע חשוב (Ctrl+B)">⭐ חשוב</button>
+      </div>
+      <div class="status" id="status">לחץ על המיקרופון כדי להתחיל. התמלול מופיע בזמן אמת.</div>
+      <form id="note-form" class="row" hidden><input id="note" class="input" style="flex:1;min-width:0" placeholder="פתק עם חותמת זמן… (Enter)"><button class="btn ghost">שמור</button></form>
+      <details class="small muted"><summary>טיפים להקלטה טובה</summary>
+        <ul style="margin:6px 0 0;padding-inline-start:1.2em">
+          <li>הנח את המחשב קרוב למרצה ככל האפשר. מיקרופון חיצוני משפר מאוד.</li>
+          <li>התמלול משתמש במיקרופון ברירת המחדל של המחשב. החלף אותו בהגדרות הקול של המחשב אם צריך.</li>
+          <li>צריך חיבור לאינטרנט. התמלול נשמר אוטומטית כל כמה שניות, גם אם הדפדפן נסגר.</li>
+          <li>חבר את המחשב לחשמל ובטל מצב שינה בשיעור ארוך. אל תסגור את הלשונית.</li>
+        </ul></details>
+    </section>
+
+    <section class="card stack" aria-label="תמלול חי">
+      <div class="row" style="justify-content:space-between"><h2 style="font-size:1.2rem">תמלול חי</h2><span class="tiny muted" id="count">0 מילים</span></div>
+      <div class="live" id="live" aria-live="polite"><p class="muted" id="placeholder">התמלול יופיע כאן ברגע שתתחיל להקליט.</p></div>
+      <div id="done" class="stack" hidden>
+        <div class="notice good" id="done-msg"><b>השיעור הסתיים.</b> העבר את התמלול לממלכה כדי לקבל סיכום, מבחן וכרטיסיות.</div>
+        <div class="row">
+          <button class="btn gold lg" id="copy">העתק לממלכה</button>
+          <a class="btn primary" id="open-kingdom" href="https://claude.ai/artifact/3d1RjRBWF92U5EdBC3MrVP" target="_blank" rel="noopener">פתח את הממלכה</a>
+        </div>
+        <p class="small muted">אחרי ההעתקה: עבור ללשונית של הממלכה ולחץ <b>Ctrl+V</b> (במק: <b>Cmd+V</b>) בכל מקום בדף. הממלכה תזהה את התמלול ותציע לשייך אותו לקורס.</p>
+        <div class="row"><button class="btn ghost" id="dl-txt">הורדת התמלול (TXT)</button><button class="btn ghost" id="dl-audio">הורדת ההקלטה (שמע)</button><button class="btn ghost" id="again">הקלטה חדשה</button></div>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<textarea class="copy" id="copy-area" aria-hidden="true" tabindex="-1"></textarea>
+
+<script>
+"use strict";
+const KEY = "kingdom-recorder-session";
+const MARK = "[הממלכה של גל · תמלול]";
+const $ = (id) => document.getElementById(id);
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const S = { status: "idle", lines: [], interim: "", elapsedBefore: 0, runStart: 0, title: "", lang: "he-IL", audioChunks: [], audioBlob: null, restarts: 0, lastResultAt: 0, saved: false };
+let rec = null, stream = null, recorder = null, actx = null, analyser = null, wakeLock = null, tick = null, saveTimer = null, netFails = 0;
+
+/* ---------- helpers ---------- */
+const clock = (sec) => { sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`; };
+const elapsed = () => S.elapsedBefore + (S.status === "rec" ? (performance.now() - S.runStart) / 1000 : 0);
+const words = () => S.lines.reduce((n, l) => n + l.text.split(/\s+/).filter(Boolean).length, 0);
+function toast(msg, ms = 3500) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), ms); }
+function setStatus(msg, warn = false) { const s = $("status"); s.textContent = msg; s.classList.toggle("warn", warn); }
+function showError(msg) { const e = $("error"); e.innerHTML = msg; e.hidden = !msg; }
+
+/* ---------- transcript ---------- */
+function addLine(text, kind = "speech") {
+  text = text.trim(); if (!text) return;
+  const t = elapsed(); const last = S.lines[S.lines.length - 1];
+  // Merge short speech fragments into paragraphs (one per ~30s) to keep the transcript readable.
+  if (kind === "speech" && last && last.kind === "speech" && t - last.t < 30 && last.text.length < 600) {
+    last.text += (/[.?!,…:]$/.test(last.text) ? " " : " ") + text;
+    renderLine(S.lines.length - 1, true);
+  } else { S.lines.push({ t, text, kind }); renderLine(S.lines.length - 1, false); }
+  $("count").textContent = `${words().toLocaleString("he-IL")} מילים`;
+  scheduleSave(); liveTick();
+}
+function renderLine(i, replace) {
+  const l = S.lines[i]; $("placeholder")?.remove();
+  const p = replace ? document.querySelector(`[data-i="${i}"]`) : document.createElement("p");
+  p.dataset.i = i; p.innerHTML = "";
+  const ts = document.createElement("span"); ts.className = "ts"; ts.textContent = clock(l.t);
+  const body = document.createElement("span"); body.textContent = l.text; if (l.kind !== "speech") body.className = "star";
+  p.append(ts, body);
+  if (!replace) $("live").insertBefore(p, $("interim-line") || null);
+  autoscroll();
+}
+function renderInterim() {
+  let el = $("interim-line");
+  if (!S.interim) { el?.remove(); return; }
+  if (!el) { el = document.createElement("p"); el.id = "interim-line"; el.className = "interim"; $("live").appendChild(el); }
+  el.textContent = S.interim; autoscroll();
+}
+function autoscroll() { const box = $("live"); if (box.scrollHeight - box.scrollTop - box.clientHeight < 160) box.scrollTop = box.scrollHeight; }
+function transcriptText() { return S.lines.map((l) => `[${clock(l.t)}] ${l.text}`).join("\n\n"); }
+function exportText() {
+  const date = new Date().toLocaleDateString("he-IL");
+  return `${MARK}\nשם השיעור: ${S.title || "שיעור"}\nתאריך: ${date}\nמשך: ${clock(elapsed())}\n\n${transcriptText()}`;
+}
+
+/* ---------- autosave / restore ---------- */
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 1500); }
+function save() { try { localStorage.setItem(KEY, JSON.stringify({ title: S.title, lang: S.lang, lines: S.lines, elapsed: elapsed(), status: S.status, savedAt: Date.now() })); } catch {} }
+function loadSaved() { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } }
+function clearSaved() { try { localStorage.removeItem(KEY); } catch {} }
+function offerRestore() {
+  const s = loadSaved(); if (!s || !s.lines?.length) return;
+  const box = $("restore");
+  box.innerHTML = `נמצא תמלול שלא סיימת להעביר: <b></b> (${s.lines.length} קטעים, ${clock(s.elapsed || 0)}). <span class="row" style="margin-top:8px"><button class="btn primary" id="r-continue">להמשיך להקליט אותו</button><button class="btn ghost" id="r-show">להציג ולהעתיק</button><button class="btn ghost" id="r-drop">למחוק</button></span>`;
+  box.querySelector("b").textContent = s.title || "שיעור ללא שם";
+  box.hidden = false;
+  const load = () => { S.title = s.title || ""; S.lang = s.lang || "he-IL"; S.lines = s.lines; S.elapsedBefore = s.elapsed || 0; $("title").value = S.title; $("lang").value = S.lang; $("live").innerHTML = ""; S.lines.forEach((_, i) => renderLine(i, false)); $("count").textContent = `${words().toLocaleString("he-IL")} מילים`; $("clock").textContent = clock(S.elapsedBefore); box.hidden = true; };
+  box.querySelector("#r-continue").onclick = () => { load(); start(true); };
+  box.querySelector("#r-show").onclick = () => { load(); S.status = "done"; showDone(); };
+  box.querySelector("#r-drop").onclick = () => { clearSaved(); box.hidden = true; };
+}
+
+/* ---------- speech recognition (auto-restarting, for hours) ---------- */
+function startRecognition() {
+  if (!SR) return;
+  rec = new SR(); const mine = rec;
+  rec.lang = S.lang; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+  rec.onresult = (e) => {
+    if (mine !== rec) return;
+    S.lastResultAt = Date.now(); netFails = 0;
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) addLine(r[0].transcript); else interim += r[0].transcript; }
+    S.interim = interim; renderInterim();
+    if (S.status === "rec") setStatus("● מקליט ומתמלל בזמן אמת");
+  };
+  rec.onerror = (e) => {
+    if (mine !== rec) return;
+    if (e.error === "no-speech" || e.error === "aborted") return;
+    if (e.error === "network") { netFails++; setStatus("אין חיבור לשירות התמלול. מנסה שוב… (ההקלטה הקולית ממשיכה)", true); return; }
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") { showError("הדפדפן חוסם את המיקרופון או את התמלול בדף הזה. לחץ על סמל המנעול ליד הכתובת ואפשר <b>מיקרופון</b>. אם המקליט פתוח מתוך Claude, הורד אותו כקובץ מהממלכה (כפתור ״הורדת המקליט״) ופתח אותו בכרום."); stop(); return; }
+    if (e.error === "audio-capture") { showError("לא נמצא מיקרופון. חבר מיקרופון ונסה שוב."); stop(); return; }
+    if (e.error === "language-not-supported") { showError("השפה שנבחרה לא נתמכת בדפדפן הזה."); stop(); }
+  };
+  rec.onend = () => {
+    if (mine !== rec) return;
+    if (S.interim) { addLine(S.interim); S.interim = ""; renderInterim(); }
+    // Chrome ends recognition sessions every minute or so; keep going until the user stops.
+    if (S.status === "rec") { S.restarts++; setTimeout(() => { if (S.status === "rec" && mine === rec) { try { rec.start(); } catch { startRecognition(); } } }, Math.min(5000, 250 * (1 + netFails))); }
+  };
+  try { rec.start(); } catch {}
+}
+function stopRecognition() { const r = rec; rec = null; try { r?.stop(); } catch {} }
+
+/* ---------- audio backup + level meter ---------- */
+async function startAudio() {
+  stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } });
+  try {
+    actx = new AudioContext(); analyser = actx.createAnalyser(); analyser.fftSize = 1024; actx.createMediaStreamSource(stream).connect(analyser);
+    if (actx.state === "suspended") actx.resume().catch(() => {});
+  } catch {}
+  try {
+    const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((m) => window.MediaRecorder?.isTypeSupported(m)) || "";
+    recorder = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 32000 });
+    recorder.ondataavailable = (e) => e.data.size && S.audioChunks.push(e.data);
+    recorder.onstop = () => { S.audioBlob = new Blob(S.audioChunks, { type: recorder.mimeType || "audio/webm" }); };
+    recorder.start(10000);
+  } catch { recorder = null; }
+}
+function meterLoop() {
+  const bars = $("meter").children; const data = new Float32Array(1024);
+  let quietSince = performance.now();
+  tick = setInterval(() => {
+    $("clock").textContent = clock(elapsed());
+    let level = 0;
+    const meterOk = analyser && actx?.state === "running";
+    if (meterOk && S.status === "rec") { analyser.getFloatTimeDomainData(data); let s = 0; for (const v of data) s += v * v; level = Math.min(1, Math.sqrt(s / data.length) * 8); }
+    for (let i = 0; i < bars.length; i++) { const c = 1 - Math.abs(i - bars.length / 2) / (bars.length / 2); bars[i].style.height = `${Math.max(10, Math.min(100, level * (35 + c * 90) * 100))}%`; }
+    if (S.status === "rec") {
+      if (!meterOk || level > 0.02) quietSince = performance.now();
+      else if (performance.now() - quietSince > 30000) setStatus("לא נקלט קול כבר חצי דקה. בדוק שהמיקרופון לא מושתק.", true);
+      if (S.lastResultAt && Date.now() - S.lastResultAt > 90000 && (!meterOk || level > 0.05)) { S.lastResultAt = Date.now(); stopRecognition(); startRecognition(); } // stuck: restart
+    }
+  }, 150);
+}
+
+/* ---------- lifecycle ---------- */
+async function start(resume = false) {
+  showError(""); $("restore").hidden = true;
+  S.title = $("title").value.trim(); S.lang = $("lang").value;
+  try { await startAudio(); }
+  catch (e) {
+    showError(e?.name === "NotAllowedError" || e?.name === "SecurityError"
+      ? "אין גישה למיקרופון. לחץ על סמל המנעול ליד שורת הכתובת ואפשר מיקרופון. אם המקליט נפתח מתוך Claude והמיקרופון חסום שם, הורד את המקליט מהממלכה (כפתור ״הורדת המקליט״) ופתח את הקובץ בכרום."
+      : "לא הצלחתי לפתוח את המיקרופון. חבר מיקרופון ונסה שוב.");
+    return;
+  }
+  if (!resume && !S.lines.length) { $("live").innerHTML = '<p class="muted" id="placeholder">מקשיב…</p>'; }
+  S.status = "rec"; S.runStart = performance.now(); S.lastResultAt = Date.now();
+  startRecognition(); meterLoop();
+  try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {}
+  $("rec").hidden = true; $("controls").hidden = false; $("note-form").hidden = false; $("done").hidden = true;
+  $("title").disabled = $("lang").disabled = true; $("meter").classList.add("on");
+  setStatus(SR ? "● מקליט ומתמלל בזמן אמת" : "● מקליט (בלי תמלול חי בדפדפן הזה)");
+  S.saved = false; save(); liveTick(true);
+}
+function pause() {
+  if (S.status === "rec") {
+    S.elapsedBefore = elapsed(); S.status = "paused"; stopRecognition(); recorder?.state === "recording" && recorder.pause();
+    $("pause").textContent = "המשך"; $("meter").classList.remove("on"); setStatus("ההקלטה מושהית (הפסקה). לחץ ״המשך״ כשהשיעור חוזר."); save(); liveTick(true);
+  } else if (S.status === "paused") {
+    S.status = "rec"; S.runStart = performance.now(); startRecognition(); recorder?.state === "paused" && recorder.resume();
+    $("pause").textContent = "השהיה"; $("meter").classList.add("on"); setStatus("● מקליט ומתמלל בזמן אמת"); liveTick(true);
+  }
+}
+function stop() {
+  if (S.status === "idle" || S.status === "done") return;
+  S.elapsedBefore = elapsed(); S.status = "done";
+  stopRecognition(); if (S.interim) { addLine(S.interim); S.interim = ""; renderInterim(); }
+  try { recorder?.state !== "inactive" && recorder?.stop(); } catch {}
+  stream?.getTracks().forEach((t) => t.stop()); actx?.close().catch(() => {});
+  clearInterval(tick); wakeLock?.release().catch(() => {});
+  $("clock").textContent = clock(S.elapsedBefore);
+  save(); showDone();
+  if (linked && S.lines.length) sendFull("stop");
+  liveTick(true);
+}
+function showDone() {
+  $("controls").hidden = true; $("note-form").hidden = true; $("rec").hidden = true; $("done").hidden = false; $("meter").classList.remove("on");
+  setStatus(S.lines.length ? `הסתיים: ${clock(S.elapsedBefore)}, ${words().toLocaleString("he-IL")} מילים.` : "לא נקלט תמלול.");
+  $("dl-audio").hidden = !S.audioChunks.length;
+  doneMessage();
+}
+function doneMessage() {
+  const m = $("done-msg");
+  if (S.saved) m.innerHTML = "<b>נשמר בממלכה ✓</b> השיעור נמצא בקורס. אפשר לסגור את החלון.";
+  else if (linked && S.lines.length) m.innerHTML = "<b>השיעור הסתיים, והתמלול נשלח לממלכה.</b> עבור לדף של הממלכה כדי לבחור קורס ולשמור. אם הוא לא הגיע, לחץ ״העתק לממלכה״ והדבק שם (Ctrl+V).";
+  else m.innerHTML = "<b>השיעור הסתיים.</b> העבר את התמלול לממלכה כדי לקבל סיכום, מבחן וכרטיסיות.";
+}
+function reset() {
+  clearSaved(); Object.assign(S, { status: "idle", lines: [], interim: "", elapsedBefore: 0, audioChunks: [], audioBlob: null, saved: false });
+  $("live").innerHTML = '<p class="muted" id="placeholder">התמלול יופיע כאן ברגע שתתחיל להקליט.</p>'; $("count").textContent = "0 מילים"; $("clock").textContent = "0:00";
+  $("done").hidden = true; $("rec").hidden = false; $("title").disabled = $("lang").disabled = false; $("title").value = ""; setStatus("לחץ על המיקרופון כדי להתחיל. התמלול מופיע בזמן אמת.");
+  liveTick(true);
+}
+
+/* ---------- export ---------- */
+async function copyToKingdom() {
+  const text = exportText();
+  try { await navigator.clipboard.writeText(text); }
+  catch { const a = $("copy-area"); a.value = text; a.select(); try { document.execCommand("copy"); } catch {} }
+  toast("הועתק! עבור ללשונית של הממלכה ולחץ Ctrl+V", 6000);
+}
+function download(blob, name) { const u = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = u; a.download = name.replace(/[\\/:*?"<>|]+/g, " "); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000); }
+
+/* ---------- live link to the kingdom ----------
+   Opened from the kingdom (window.open), the recorder streams the transcript to it, takes
+   pause / star / note / stop from it, and hands the full text over at the end. */
+const HOST = (() => { try { return window.opener && window.opener !== window ? window.opener : null; } catch { return null; } })();
+let linked = false, sentCount = 0, lastTick = 0;
+function post(msg) { if (!HOST) return; try { HOST.postMessage({ kr: 1, ...msg }, "*"); } catch {} }
+function liveTick(force = false) {
+  if (!HOST) return;
+  const now = Date.now(); if (!force && now - lastTick < 1200) return; lastTick = now;
+  const base = Math.max(0, Math.min(sentCount, S.lines.length) - 1); // the last line may still be growing
+  post({ type: "tick", status: S.status, seconds: Math.floor(elapsed()), words: words(), title: S.title || $("title").value.trim(), base,
+    lines: S.lines.slice(base).map(({ t, text, kind }) => ({ t, text, kind })), interim: S.interim.slice(-400),
+    restore: !$("restore").hidden, saved: S.saved, error: $("error").hidden ? "" : $("error").textContent, speech: !!SR });
+  sentCount = S.lines.length;
+}
+function sendFull(reason) { if (S.lines.length) post({ type: "full", reason, text: exportText() }); }
+function star() { if (S.status === "rec" || S.status === "paused") addLine("⭐ הסטודנט סימן את הרגע הזה כחשוב", "star"); }
+function note(v) { v = String(v || "").trim().slice(0, 500); if (v && S.status !== "idle") addLine(`📝 פתק של הסטודנט: ${v}`, "note"); }
+addEventListener("message", (e) => {
+  if (!HOST || e.source !== HOST) return;
+  const d = e.data; if (!d || d.kr !== 1) return;
+  if (d.type === "hello") {
+    linked = true; sentCount = 0; $("linked").hidden = false;
+    if (d.start && S.status === "done" && (S.saved || !S.lines.length)) reset();
+    if (S.status === "idle" && $("restore").hidden) {
+      if (d.title) $("title").value = String(d.title).slice(0, 120);
+      if (d.start) start(false);
+    }
+    if (S.status === "done") doneMessage();
+    liveTick(true);
+  } else if (d.type === "pull") sendFull(d.reason === "backup" ? "backup" : "send");
+  else if (d.type === "saved") { if (S.status === "done") { S.saved = true; clearSaved(); doneMessage(); } liveTick(true); }
+  else if (d.type === "cmd") {
+    if (d.cmd === "pause" && S.status === "rec") pause();
+    else if (d.cmd === "resume" && S.status === "paused") pause();
+    else if (d.cmd === "stop") stop();
+    else if (d.cmd === "star") star();
+    else if (d.cmd === "note") note(d.text);
+    liveTick(true);
+  }
+});
+if (HOST) {
+  setInterval(() => liveTick(), 1500);
+  addEventListener("pagehide", () => { if (!S.saved) sendFull("backup"); post({ type: "closed" }); });
+  $("kingdom-link").onclick = (e) => { e.preventDefault(); try { HOST.focus(); } catch {} toast("הממלכה פתוחה בחלון שממנו פתחת את המקליט. התמלול מופיע שם בזמן אמת."); };
+}
+
+/* ---------- wire up ---------- */
+for (let i = 0; i < 22; i++) $("meter").appendChild(document.createElement("i"));
+if (!SR) $("unsupported").hidden = false;
+$("rec").onclick = () => start(false);
+$("pause").onclick = pause;
+$("stop").onclick = stop;
+$("star").onclick = star;
+$("note-form").onsubmit = (e) => { e.preventDefault(); note($("note").value); $("note").value = ""; };
+addEventListener("pointerdown", () => { if (actx?.state === "suspended") actx.resume().catch(() => {}); });
+$("copy").onclick = copyToKingdom;
+$("dl-txt").onclick = () => download(new Blob([exportText()], { type: "text/plain;charset=utf-8" }), `${S.title || "שיעור"}.txt`);
+$("dl-audio").onclick = () => { const b = S.audioBlob || new Blob(S.audioChunks, { type: "audio/webm" }); download(b, `${S.title || "שיעור"}.${b.type.includes("mp4") ? "m4a" : "webm"}`); };
+$("again").onclick = reset;
+addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") { e.preventDefault(); $("star").click(); } });
+addEventListener("beforeunload", (e) => { if (S.status === "rec" || S.status === "paused") { save(); e.preventDefault(); e.returnValue = ""; } });
+document.addEventListener("visibilitychange", async () => { if (document.visibilityState === "visible" && S.status === "rec") { try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {} } });
+offerRestore();
+post({ type: "ready" });
+</script>
+</body>
+</html>
